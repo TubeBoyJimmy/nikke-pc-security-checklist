@@ -1,184 +1,290 @@
-# Windows 手動檢查 NIKKE 啟動器痕跡
+# Windows 檢查指令
 
-適用於 Windows PowerShell 5.1 或 PowerShell 7。請用當時玩遊戲的 Windows 帳號操作。若已看到 `k2f_chan registered` 或特定惡意 DLL，先斷開網路，從系統匣完整結束啟動器，直接依 [README 的處置說明](README.md) 處理。後面的檢查可以保留證據，不必等全部做完才處理帳號。
+這頁的檢查指令**只讀取、不修改任何東西**，不需要系統管理員權限，也不需要連網。請用**當時玩遊戲的 Windows 帳號**執行。
 
-以下區塊可逐段貼進同一個 PowerShell 視窗。第 1～4 節都是本機唯讀查詢，無須下載工具或使用系統管理員權限。先保留日誌，避免為了檢查而重開、重裝遊戲或清快取。曾用過多個 Windows 帳號、裝過不同區服或搬過安裝目錄，就分別檢查。請勿公開上傳整份日誌或快取，裡面可能有主機名稱、識別碼及登入資料。
+開始前，先在右下角系統匣對 NIKKE 啟動器按右鍵，選結束。
 
-## 1. 啟動器是否執行過遠控程式
+## 一鍵檢查
 
-先在檔案總管找到 NIKKE 安裝目錄底下的 `Launcher` 資料夾，它裡面應有 `intl_service`。將 **Launcher 資料夾** 的完整路徑貼給下列指令。它只顯示日誌所涵蓋的首末時間、特徵出現次數與時間，略過主機名稱和識別碼。
-
-```powershell
-$launcher = (Read-Host '請輸入遊戲安裝目錄下 Launcher 資料夾的完整路徑').Trim().Trim('"')
-$debugLog = Join-Path $launcher 'intl_service\debug.log'
-if (Test-Path -LiteralPath $debugLog -PathType Leaf) {
-    $firstStamp = $null
-    $lastStamp = $null
-    $hits = @(
-        foreach ($line in [IO.File]::ReadLines($debugLog)) {
-            $stamp = $null
-            if ($line -match '^\[(?<stamp>\d{4}/\d{6}(?:\.\d+)?)[:\]]') {
-                $stamp = $Matches.stamp
-                if (-not $firstStamp) { $firstStamp = $stamp }
-                $lastStamp = $stamp
-            }
-            if ($line.Contains('"k2f_chan registered"')) {
-                if ($stamp) { $stamp } else { '時間格式無法辨識' }
-            }
-        }
-    )
-    [pscustomobject]@{
-        FirstLogTime = $firstStamp
-        LastLogTime  = $lastStamp
-        Matches      = $hits.Count
-        MatchTimes   = $hits -join ', '
-    }
-} else { '找不到 debug.log，這份安裝的歷史無法由第一步判讀。' }
-```
-
-`Matches` 大於 0 是遠控程式在啟動器中執行過的強證據。這個結果本身無法告訴你哪些資料傳出。`Matches = 0` 要搭配首末時間判讀。`1024/094320.599` 代表該電腦當地時間 10 月 24 日 09 時 43 分 20.599 秒，沒有年份或時區。首末時間不能證明中間每次啟動都保有紀錄。若欄位空白、出現讀取錯誤、曾刪除或重裝，請視為資料不足。單獨的 `startup already in progress` 或 `FETCH_LIST suc success` 也不足以認定感染。[執行指標與日誌保存方式](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5#check-if-you-are-infected)
-
-## 2. 啟動器是否請求過惡意下載
-
-沿用上一節的 `$launcher`。下面只查 `log\tinyget` 中檔名有日期的 `tinyget.*.log`，列出提到特定下載網址的日誌檔名和行數。它略過 `tinyget.mem.log`。後者會重複使用同一個緩衝區，尾端有時留有舊工作階段的內容。
+1. 在開始按鈕上按右鍵，選「終端機」或「Windows PowerShell」。
+2. 複製下面整段，在視窗裡按右鍵貼上，再按 Enter。跳出「多行貼上」的警告就選仍要貼上；貼上後畫面停頓幾秒是正常的。
+3. 等幾秒到一兩分鐘。如果沒自動找到 NIKKE，它會請你貼上安裝資料夾的路徑。
 
 ```powershell
-$tiny = Join-Path $launcher 'log\tinyget'
-if (Test-Path -LiteralPath $tiny -PathType Container) {
-    $logs = @(Get-ChildItem -LiteralPath $tiny -File -ErrorAction Stop |
-        Where-Object { $_.Name -match '^tinyget\.\d{8}[^\\/]*\.log$' })
-    "找到 $($logs.Count) 份有日期的 tinyget 日誌。"
-    foreach ($log in $logs) {
-        $rows = @(Select-String -LiteralPath $log.FullName -SimpleMatch -ErrorAction Stop `
-            -Pattern 'analytics.insightjs.com/comm/assets/insight.bundle')
-        if ($rows.Count) {
-            [pscustomobject]@{ File = $log.Name; MatchingLines = $rows.Count }
-        }
-    }
-} else { '找不到 tinyget 資料夾，無法判讀下載紀錄。' }
-```
-
-有命中代表該批日誌記錄了惡意網址。`AddTask` 等請求紀錄本身無法證明下載完成。若需釐清，離線用記事本查看命中處附近的同一筆工作是否完成，再比對第 1 節的時間。早期個案記錄的檔名是 `k2f.lua`，其他個案的惡意內容使用 `.log` 副檔名；不要執行或嘗試載入這些檔案。若只有一筆下載請求，先停止使用啟動器、保留資料並查第 3、4 節。若確認已下載成功，應先按疑似主機遭入侵處理。[檔名、下載紀錄與早期樣本](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5#stage-2-payload-download)
-
-## 3. 分別查啟動器的腳本快取與遠控狀態
-
-這一步和系統有沒有裝 Google Chrome 無關。先關閉啟動器，再檢查 `%APPDATA%` 下的 `nikke_launcher` 與 `nikke_launcher_hmt`。`Code Cache\js` 裡的腳本網址是**接觸線索**。`Local Storage\leveldb` 裡的 `k2f.agent.state` 是**遠控程式曾執行的強證據**。兩種結果的意義不同，請分開記錄。[研究者列出的兩種痕跡](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5#check-if-you-are-infected)
-
-下列程式以單位元組 ASCII 相容編碼及 UTF-16LE 兩種形式搜尋相同的特徵，僅輸出檔案數量。每個目錄最多讀 32 個檔、每檔最多 8 MiB。腳本快取優先選研究者驗過的四個檔名，再依修改時間由新到舊選檔；檔名相符本身不計入命中。LevelDB 則只查 `.log`、`.ldb`、`.sst`。
-
-```powershell
-function Test-NikkeCacheMarker ([byte[]]$bytes, [string[]]$markers) {
-    # 每個位元組對應一個字元，UTF-16LE 特徵即使從奇數位移開始也能比對。
-    $oneByte = [Text.Encoding]::GetEncoding(28591)
-    $data = $oneByte.GetString($bytes)
-    foreach ($marker in $markers) {
-        $wide = $oneByte.GetString([Text.Encoding]::Unicode.GetBytes($marker))
-        if ($data.Contains($marker) -or $data.Contains($wide)) { return $true }
-    }
-    return $false
-}
-
-$knownCacheFiles = 'dd65fa4d61079e7e_0','ce2fd3f1007a9fe9_0','1416c638b3830103_0','fd520c7c0f65c2d7_0'
-foreach ($profileName in 'nikke_launcher', 'nikke_launcher_hmt') {
-    foreach ($area in 'Code Cache\js', 'Local Storage\leveldb') {
-        $store = Join-Path $env:APPDATA "$profileName\tbs_cache\$area"
+& {
+$ErrorActionPreference = 'SilentlyContinue'
+$clsid = 'Software\Classes\CLSID\{E77CC89B-7401-4C04-8CED-149DB35ADD04}'
+$red = New-Object 'System.Collections.Generic.List[string]'
+$yel = New-Object 'System.Collections.Generic.List[string]'
+$note = New-Object 'System.Collections.Generic.List[string]'
+$latin1 = [Text.Encoding]::GetEncoding(28591)
+$userDir = $env:USERPROFILE
+function Show-Path([string]$p) { if ($userDir) { return $p.Replace($userDir, '~') }; return $p }
+function Get-Text([IO.FileInfo]$f) {
+    if ($f.Length -gt 64MB) { return $null }
+    try {
+        $fs = [IO.File]::Open($f.FullName, 'Open', 'Read', 'ReadWrite, Delete')
         try {
-            $files = @(Get-ChildItem -LiteralPath $store -File -Force -ErrorAction Stop)
-        } catch {
-            "$profileName / $area：目錄不存在或無法讀取，未檢查。"
-            continue
-        }
-        if ($area -eq 'Code Cache\js') {
-            $markers = 'insightjs.com/l.js','insightjs.org/l.js'
-        } else {
-            $markers = @('k2f.agent.state')
-            $files = @($files | Where-Object { $_.Extension -in '.log','.ldb','.sst' })
-        }
-        $chosen = @($files | Where-Object { $_.Length -le 8MB } |
-            Sort-Object @{ Expression = { $_.Name -in $knownCacheFiles } }, LastWriteTimeUtc -Descending |
-            Select-Object -First 32)
-        $matched = 0
-        $checked = 0
-        foreach ($file in $chosen) {
-            try {
-                $reader = [IO.BinaryReader]::new([IO.File]::OpenRead($file.FullName))
-                try {
-                    $length = $reader.BaseStream.Length
-                    if ($length -gt 8MB) { continue }
-                    $bytes = $reader.ReadBytes([int]$length)
-                    if ($bytes.Length -ne $length -or $reader.BaseStream.Length -ne $length) { continue }
-                    if (Test-NikkeCacheMarker $bytes $markers) { $matched++ }
-                    $checked++
-                } finally { $reader.Dispose() }
-            } catch { Write-Warning '有檔案無法讀取，已計入未檢查。' }
-        }
-        [pscustomobject]@{
-            Profile = $profileName; Area = $area; FilesRead = $checked
-            FilesSkipped = $files.Count - $checked; FilesWithMarker = $matched
-        }
+            $buf = New-Object byte[] ([int]$fs.Length)
+            $n = 0
+            while ($n -lt $buf.Length) { $r = $fs.Read($buf, $n, $buf.Length - $n); if ($r -le 0) { break }; $n += $r }
+            return $latin1.GetString($buf, 0, $n)
+        } finally { $fs.Dispose() }
+    } catch { return $null }
+}
+function Find-Mark([string]$text, [string[]]$marks) {
+    foreach ($m in $marks) {
+        if ($text.Contains($m)) { return $m }
+        if ($text.Contains($latin1.GetString([Text.Encoding]::Unicode.GetBytes($m)))) { return $m }
     }
+    return $null
+}
+
+# 1. 找 NIKKE 安裝位置（解除安裝清單 + 各磁碟前三層名稱含 NIKKE 的資料夾）
+$roots = New-Object 'System.Collections.Generic.List[string]'
+foreach ($k in 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*') {
+    foreach ($e in @(Get-ItemProperty -Path $k)) {
+        if ("$($e.DisplayName)" -like '*NIKKE*' -and $e.InstallLocation) { $roots.Add("$($e.InstallLocation)".Trim().Trim('"')) }
+    }
+}
+$skip = @('Windows', '$Recycle.Bin', 'System Volume Information')
+foreach ($drv in [IO.DriveInfo]::GetDrives()) {
+    if ($drv.DriveType -ne [IO.DriveType]::Fixed -or -not $drv.IsReady) { continue }
+    $level = @($drv.RootDirectory.FullName)
+    for ($depth = 1; $depth -le 3; $depth++) {
+        $next = New-Object 'System.Collections.Generic.List[string]'
+        foreach ($dir in $level) {
+            foreach ($c in @(Get-ChildItem -LiteralPath $dir -Directory -Force)) {
+                if (($c.Attributes -band [IO.FileAttributes]::ReparsePoint) -or ($depth -eq 1 -and $skip -contains $c.Name)) { continue }
+                if ($c.Name -like '*NIKKE*') { $roots.Add($c.FullName) }
+                if ($depth -lt 3) { $next.Add($c.FullName) }
+            }
+        }
+        $level = $next
+    }
+}
+$launchers = New-Object 'System.Collections.Generic.List[string]'
+function Add-Launcher([string]$root) {
+    if (-not $root -or -not (Test-Path -LiteralPath $root -PathType Container)) { return }
+    foreach ($c in @(Get-Item -LiteralPath $root -Force) + @(Get-ChildItem -LiteralPath $root -Directory -Recurse -Depth 2 -Force -Filter 'Launcher')) {
+        $hasLog = Test-Path -LiteralPath (Join-Path $c.FullName 'intl_service')
+        $hasDl = Test-Path -LiteralPath (Join-Path $c.FullName 'log')
+        if (($hasLog -or $hasDl) -and -not ($launchers -contains $c.FullName)) { $launchers.Add($c.FullName) }
+    }
+}
+foreach ($r in $roots) { Add-Launcher $r }
+$dataDirs = @(Get-ChildItem -LiteralPath $env:APPDATA -Directory -Force -Filter 'nikke_launcher*')
+if ($launchers.Count -eq 0) {
+    $manual = ''
+    try { $manual = Read-Host '沒自動找到 NIKKE 安裝位置。有安裝的話，請貼上安裝資料夾路徑後按 Enter（沒有就直接按 Enter）' } catch {}
+    Add-Launcher "$manual".Trim().Trim('"')
+}
+
+# 2. 啟動器日誌、下載紀錄
+$missingLog = $false
+foreach ($L in $launchers) {
+    $dbg = Join-Path $L 'intl_service\debug.log'
+    if (Test-Path -LiteralPath $dbg -PathType Leaf) {
+        $first = $null; $last = $null; $hits = [ordered]@{}; $weak = 0
+        try {
+            $sr = New-Object IO.StreamReader([IO.File]::Open($dbg, 'Open', 'Read', 'ReadWrite, Delete'))
+            try {
+                while ($null -ne ($line = $sr.ReadLine())) {
+                    $stamp = $null
+                    if ($line -match '^\[(?:\d+:\d+:)?(\d{4}/\d{6})') { $stamp = $Matches[1]; if (-not $first) { $first = $stamp }; $last = $stamp }
+                    $m = $null
+                    foreach ($x in 'k2f_chan', 'lua downloaded to', 'agent started as', 'analytics.insightjs.com', 'insight.bundle') { if ($line.Contains($x)) { $m = $x; break } }
+                    if ($m) { if (-not $hits.Contains($m)) { $hits[$m] = $stamp } } elseif ($line.Contains('insightjs')) { $weak++ }
+                }
+            } finally { $sr.Dispose() }
+            foreach ($m in $hits.Keys) { $red.Add("debug.log 出現「$m」（第一次：$($hits[$m])）：$(Show-Path $dbg)") }
+            if ($weak) { $yel.Add("debug.log 有 $weak 行提到 insightjs：$(Show-Path $dbg)") }
+            if ($first) { $note.Add("debug.log 涵蓋期間 $first ~ $last（月日/時分秒，沒有年份）：$(Show-Path $dbg)") } else { $note.Add("debug.log 沒有可辨識的時間戳：$(Show-Path $dbg)") }
+        } catch { $missingLog = $true; $note.Add("debug.log 無法讀取：$(Show-Path $dbg)") }
+    } else { $missingLog = $true; $note.Add("找不到 debug.log：$(Show-Path $dbg)") }
+    foreach ($f in @(Get-ChildItem -LiteralPath (Join-Path $L 'log') -File -Recurse -Depth 8 -Force)) {
+        if ($f.Name -eq 'k2f.lua') { $red.Add("下載資料夾有木馬檔 k2f.lua：$(Show-Path $f.FullName)"); continue }
+        $t = Get-Text $f
+        if ($null -eq $t) { $note.Add("檔案太大或無法讀取，未檢查：$(Show-Path $f.FullName)"); continue }
+        if ($t.Length -ge 3 -and [int]$t[0] -eq 0x1B -and [int]$t[1] -eq 0x4C -and [int]$t[2] -eq 0x4A) { $red.Add("下載資料夾有 LuaJIT 木馬本體：$(Show-Path $f.FullName)"); continue }
+        $m = Find-Mark $t @('insight.bundle', 'analytics.insightjs.com')
+        if (-not $m -and $f.Name -like 'tinyget*' -and $t.Contains('-3214f"')) { $m = 'ETag -3214f（木馬本體的下載回應）' }
+        if ($m) { $red.Add("下載紀錄出現「$m」：$(Show-Path $f.FullName)") } elseif (Find-Mark $t @('insightjs')) { $yel.Add("下載紀錄提到 insightjs：$(Show-Path $f.FullName)") }
+    }
+}
+
+# 3. 啟動器資料與快取（%APPDATA%\nikke_launcher*）
+foreach ($d in $dataDirs) {
+    foreach ($f in @(Get-ChildItem -LiteralPath $d.FullName -File -Recurse -Depth 12 -Force)) {
+        $t = Get-Text $f
+        if ($null -eq $t) { $note.Add("檔案太大或無法讀取，未檢查：$(Show-Path $f.FullName)"); continue }
+        $p = Show-Path $f.FullName
+        $m = Find-Mark $t @('k2f_chan', 'k2f.agent')
+        if ($m) { $red.Add("啟動器資料有木馬紀錄「$m」：$p"); continue }
+        if ($f.Name -eq 'TransportSecurity' -and $t.Contains('wxL1BeG57AG6frvPqS7txqpE3NyN0/fSUZHCbEn9NSw=')) { $red.Add("連線紀錄有木馬伺服器 analytics.insightjs.com：$p"); continue }
+        if ($f.Name -eq 'Network Persistent State' -and $t.Contains('analytics.insightjs.com')) { $red.Add("連線紀錄有木馬伺服器 analytics.insightjs.com：$p"); continue }
+        if ($f.Name -eq 'TransportSecurity' -and $t.Contains('JeFWywdZy+3jPC93e3P7ACdJ8liQHB7rH+9VHn7kswg=')) { $yel.Add("連線紀錄有 insightjs.com：$p"); continue }
+        if (Find-Mark $t @('insightjs')) { $yel.Add("啟動器快取載入過 insightjs 腳本：$(Show-Path $f.DirectoryName)") }
+    }
+}
+
+# 4. 瀏覽器常駐 DLL、暫存檔、登錄檔
+$userData = @("$env:LOCALAPPDATA\Google\Chrome\User Data", "$env:LOCALAPPDATA\Microsoft\Edge\User Data", "$env:LOCALAPPDATA\BraveSoftware\Brave-Browser\User Data", "$env:LOCALAPPDATA\Vivaldi\User Data", "$env:LOCALAPPDATA\Chromium\User Data", "$env:APPDATA\Opera Software\Opera Stable", "$env:APPDATA\Opera Software\Opera GX Stable")
+foreach ($u in $userData) {
+    foreach ($i in @(Get-ChildItem -LiteralPath (Join-Path $u 'PlatformExperienceHelper') -Recurse -Depth 4 -Force)) {
+        if ($i.PSIsContainer -and $i.Name -match '^[0-9a-f]{64}$') { $red.Add("常駐用的 64 碼資料夾（裡面沒有 DLL 也算）：$(Show-Path $i.FullName)") }
+        elseif (-not $i.PSIsContainer -and $i.Name -eq 'platform_experience_helper.dll') { $red.Add("惡意 DLL：$(Show-Path $i.FullName)") }
+    }
+}
+foreach ($b in @($env:LOCALAPPDATA, $env:ProgramW6432, $env:ProgramFiles, ${env:ProgramFiles(x86)}) | Where-Object { $_ } | Select-Object -Unique) {
+    foreach ($n in 'platform_experience_helper.dll', 'platform_experience_helper.dll.old', 'old-clsid.txt') {
+        $p = Join-Path $b "Google\Chrome\Application\PlatformExperienceHelper\$n"
+        if (Test-Path -LiteralPath $p -PathType Leaf) { $red.Add("舊版常駐檔案：$(Show-Path $p)") }
+    }
+}
+foreach ($f in @(Get-ChildItem -LiteralPath $env:TEMP -Force -Filter 'k2f*')) { $red.Add("暫存資料夾有木馬檔案：$(Show-Path $f.FullName)") }
+foreach ($view in 'Registry64', 'Registry32') {
+    $base = [Microsoft.Win32.RegistryKey]::OpenBaseKey('CurrentUser', $view)
+    $key = $base.OpenSubKey($clsid)
+    if ($key) {
+        $v = $null
+        $ip = $key.OpenSubKey('InprocServer32')
+        if ($ip) { $v = $ip.GetValue(''); $ip.Close() }
+        $key.Close()
+        if ($v) { $red.Add("登錄檔常駐：HKCU\$clsid 指向 $(Show-Path "$v")") } else { $red.Add("登錄檔殘留：HKCU\$clsid 存在但沒有內容，代表曾被裝過") }
+    }
+    $base.Close()
+}
+
+# 5. 結果
+Write-Host ''
+if ($launchers.Count) { $launchers | ForEach-Object { Write-Host "已檢查：$(Show-Path $_)" } }
+$note | Select-Object -Unique | ForEach-Object { Write-Host "  [i] $_" -ForegroundColor Gray }
+$red | Select-Object -Unique | ForEach-Object { Write-Host "  [X] $_" -ForegroundColor Red }
+$yel | Select-Object -Unique | ForEach-Object { Write-Host "  [!] $_" -ForegroundColor Yellow }
+Write-Host ''
+if ($red.Count) { Write-Host '【結果：中毒】木馬在這台電腦跑過。先斷網，用手機改密碼並登出所有裝置，再照 README「中毒了怎麼辦」處理。' -ForegroundColor Red }
+elseif ($yel.Count) { Write-Host '【結果：有接觸】啟動器載入過攻擊腳本，但沒找到木馬執行的痕跡。帳號請照中毒處理：用手機改密碼並登出所有裝置。' -ForegroundColor Yellow }
+elseif ($launchers.Count -eq 0 -and $dataDirs.Count -eq 0) { Write-Host '【結果：找不到 NIKKE】這個 Windows 帳號下沒有 NIKKE PC 版的安裝或資料。裝在特別位置的話，重跑一次並貼上路徑。' -ForegroundColor Cyan }
+elseif ($missingLog -or $launchers.Count -eq 0) { Write-Host '【結果：資料不足】缺少 debug.log 或安裝位置，無法判斷。帳號請照「有接觸」處理。' -ForegroundColor Cyan }
+else { Write-Host '【結果：沒找到已知痕跡】請確認上面 debug.log 的涵蓋期間有包含你玩的日期。9/27 後開過啟動器的話，仍建議用手機改 NIKKE 密碼。' -ForegroundColor Green }
+Write-Host '提醒：找不到不等於 100% 安全。官方確認修好之前，先不要開 PC 版啟動器。'
 }
 ```
 
-請依 `Area` 判讀 `FilesWithMarker`。只有 `Code Cache\js` 命中，就補查下載與執行跡象。`Local Storage\leveldb` 命中，依高風險處理。`FilesRead = 0` 代表該組沒有讀到候選檔。`FilesSkipped` 包含超出上限、讀取中長度改變或讀取失敗的候選檔，數值大於 0 就有未檢查部分。即使全讀且未命中，也只排除現存檔案裡的這兩種明文編碼，無法排除已清除、汰換或壓縮的歷史紀錄。[本機狀態特徵及適用範圍](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/checks.md)
+### 結果怎麼看
 
-## 4. Windows 是否留有 DLL 和登錄設定
+- `[X]` 紅字：中毒的痕跡。
+- `[!]` 黃字：有接觸的痕跡。
+- `[i]` 灰字：補充資訊。**請看「debug.log 涵蓋期間」**，確認有包含你玩的日期。時間格式是「月日/時分秒」，例如 `1101/012037` 是 11/1 01:20:37。
+- 最後一行是結論，對照 [README 的判讀表](README.md#結果怎麼判讀)。
 
-在當時玩遊戲的 Windows 帳號下執行。先看特定路徑，不需安裝或打開 Chrome。程式只讀取「64 個十六進位字元的子資料夾」下名為 `platform_experience_helper.dll` 的檔案並計算 SHA-256。正常的父資料夾、`platform_experience_helper.exe` 或 `LoadFeatures` 都不是本步的命中項目。
+如果跑出一堆紅色錯誤訊息（不是 `[X]` 開頭的），通常是複製時少了符號，請從頭重新複製一次。
+
+結果要給別人看時，先把使用者名稱、電腦名稱遮掉。
+
+### 這段指令查了哪些地方
+
+| 位置 | 找什麼 |
+|---|---|
+| 安裝資料夾的 `Launcher\intl_service\debug.log` | `k2f_chan`、`lua downloaded to`、`agent started as`、`insight.bundle`、`analytics.insightjs.com`，以及紀錄涵蓋的期間 |
+| 安裝資料夾的 `Launcher\log\`（包含 `tinyget.mem.log`） | `insight.bundle`、`analytics.insightjs.com`、木馬下載回應的 ETag（`-3214f`）、`k2f.lua`、LuaJIT 格式的檔案 |
+| `%APPDATA%\nikke_launcher`、`%APPDATA%\nikke_launcher_hmt`（國際版、台港澳版） | `k2f_chan`、`k2f.agent`、`insightjs`，以及連線紀錄 `TransportSecurity`、`Network Persistent State` |
+| Chrome、Edge、Brave、Vivaldi、Opera、Chromium 的 `PlatformExperienceHelper` | 64 碼的子資料夾、`platform_experience_helper.dll` |
+| `Google\Chrome\Application\PlatformExperienceHelper`（舊版常駐位置） | `platform_experience_helper.dll`、`platform_experience_helper.dll.old`、`old-clsid.txt` |
+| `%TEMP%` | `k2f` 開頭的檔案 |
+| 登錄檔 `HKCU\Software\Classes\CLSID\{E77CC89B-7401-4C04-8CED-149DB35ADD04}`（64 位元與 32 位元） | 這個機碼存不存在、指向哪裡 |
+
+- 找 NIKKE 的方式：Windows 的解除安裝清單，加上每顆硬碟前三層名稱含 `NIKKE` 的資料夾。
+- 快取檔是二進位格式，指令會同時用 ASCII 和 UTF-16 兩種編碼搜尋。
+- 單一檔案超過 64 MB 會略過，並在 `[i]` 列出來。
+
+## 不想跑指令：手動看這幾個地方
+
+1. **啟動器紀錄**：用記事本打開 `NIKKE 安裝資料夾\Launcher\intl_service\debug.log`，按 Ctrl+F 搜尋 `k2f_chan`。有找到就是中了。
+2. **常駐資料夾**：在檔案總管的網址列貼上 `%LOCALAPPDATA%\Google\Chrome\User Data\PlatformExperienceHelper`，按 Enter。顯示「找不到」就沒事；裡面如果有 64 碼英數字的子資料夾，就是中了。
+3. **暫存資料夾**：在網址列貼上 `%TEMP%`，按 Enter。有 `k2f` 開頭的檔案就是中了。
+4. **登錄檔**：在 PowerShell 輸入下面兩行。兩行都顯示「找不到指定的登錄機碼或值」才是沒事；只要有查到東西（就算是空的），就是中了。
 
 ```powershell
-$helper = Join-Path $env:LOCALAPPDATA 'Google\Chrome\User Data\PlatformExperienceHelper'
-$dlls = @(
-    if (Test-Path -LiteralPath $helper -PathType Container) {
-        foreach ($folder in (Get-ChildItem -LiteralPath $helper -Directory -Force -ErrorAction Stop)) {
-            if ($folder.Name -notmatch '^[0-9a-f]{64}$') { continue }
-            $dll = Join-Path $folder.FullName 'platform_experience_helper.dll'
-            if (Test-Path -LiteralPath $dll -PathType Leaf) {
-                Get-FileHash -LiteralPath $dll -Algorithm SHA256 -ErrorAction Stop |
-                    Select-Object -ExpandProperty Hash
-            }
-        }
-    }
-)
-"符合路徑及檔名的 DLL 數量：$($dlls.Count)"
-$dlls
+reg query "HKCU\Software\Classes\CLSID\{E77CC89B-7401-4C04-8CED-149DB35ADD04}"
+reg query "HKCU\Software\Classes\CLSID\{E77CC89B-7401-4C04-8CED-149DB35ADD04}" /reg:32
 ```
 
-再查目前使用者 `HKCU` 的登錄機碼。`/ve` 讀取預設值，`/reg:64` 和 `/reg:32` 分別查兩種 Windows 登錄檢視。輸出可能包含 Windows 使用者路徑，請留作本機比對。不要修改或刪除 `HKLM` 中指向 Windows `wpc.dll` 的正常項目。
+啟動器快取（`tbs_cache`）是二進位檔，用記事本搜不準，這部分請用一鍵檢查。
+
+## Defender 保護歷程（選用）
+
+打開「Windows 安全性 → 病毒與威脅防護 → 保護歷程記錄」，看有沒有相關的隔離或封鎖紀錄，有的話記下時間和名稱。沒有紀錄不代表沒事，Defender 曾經漏掉這顆 DLL。
+
+## 封鎖攻擊用的網域和 IP
+
+這一節會**修改設定**，是預防措施，不是檢查。
+
+**AdGuard Home（全家一起擋）**：在「過濾器 → 自訂過濾規則」加上下面兩行，子網域也會一起擋掉。
+
+```text
+||insightjs.com^
+||insightjs.org^
+```
+
+**單台電腦（hosts 檔）**：在開始按鈕上按右鍵，選「終端機（系統管理員）」或「Windows PowerShell（系統管理員）」，貼上：
 
 ```powershell
-$key = 'HKCU\Software\Classes\CLSID\{E77CC89B-7401-4C04-8CED-149DB35ADD04}\InprocServer32'
-if ([Environment]::Is64BitOperatingSystem) { reg.exe query $key /ve /reg:64 }
-reg.exe query $key /ve /reg:32
+Add-Content -Path "$env:SystemRoot\System32\drivers\etc\hosts" -Value '', '0.0.0.0 insightjs.com', '0.0.0.0 analytics.insightjs.com', '0.0.0.0 insightjs.org'
+ipconfig /flushdns
 ```
 
-若預設值指向上述可疑 DLL，且檔案存在，已找到持久化的強證據。若只留檔案、預設值空白，或指向已不存在的檔案，可能是安裝或清除後的殘跡，無法據此判定現在仍在執行。若顯示機碼不存在，僅代表該檢視沒找到這項設定；「存取被拒」則是無法查核。惡意 DLL 的雜湊可能每台都不同，不能用單一公布雜湊排除感染。[DLL 路徑與已知清除殘跡](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/incident.md#persistence-on-windows) · [Microsoft 登錄查詢說明](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/reg-query)
+**封鎖 IP**（hosts 檔擋不了 IP）：在路由器設定裡封鎖 `89.127.233.127`、`89.126.250.172`，或在同一個系統管理員視窗貼上：
 
-## 5. 選用 Microsoft Defender 掃描
+```powershell
+New-NetFirewallRule -DisplayName 'NIKKE incident - block attacker IPs' -Direction Outbound -RemoteAddress '89.127.233.127', '89.126.250.172' -Action Block
+```
 
-先開「Windows 安全性 → 病毒與威脅防護 → 保護歷程記錄」，查看是否早有相關隔離或封鎖紀錄，記下時間與名稱。部分 Windows 版本譯為「保護歷程」或顯示 **Protection history**。檔案若已隔離，留在隔離區即可。沒有歷程紀錄也無法排除入侵。[Microsoft 保護歷程說明](https://support.microsoft.com/en-us/windows/protection-history-f1e5fd95-09b4-46d1-b8c7-1059a1e09708)
+要撤回這條規則：
 
-完成證據保全後，可在「Windows 安全性 → 病毒與威脅防護 → 掃描選項」執行完整掃描。若選擇 Microsoft Defender 離線掃描，請先儲存工作，電腦會重新啟動。防毒軟體可能隔離檔案，建議先記下上面查到的時間和雜湊。曾有使用者回報 Defender 離線掃描未偵測到與本事件相符的 DLL。若已找到執行或持久化證據，掃描結果不影響斷網、從乾淨裝置處理帳號，以及以可信安裝媒體重建 Windows 的處置優先順序。[Microsoft Defender 離線掃描](https://learn.microsoft.com/en-us/defender-endpoint/microsoft-defender-offline) · [事件研究者的處置建議](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5#what-to-do)
+```powershell
+Remove-NetFirewallRule -DisplayName 'NIKKE incident - block attacker IPs'
+```
 
-## 6. 選用額外防護：封鎖 tbs_browser.exe 的出站連線
+## 選用：擋住 tbs_browser.exe 的對外連線
 
-本節是可逆的網路限制，**不是停用程式、感染檢測、木馬清除或安全復玩許可**。目前仍以暫停開啟 PC 啟動器為優先；已有執行或常駐跡證時，依 README 隔離與處理帳號，不要只加這條規則。研究者分析的已知 agent 通訊經過啟動器內嵌瀏覽器，但不能推論所有版本、其他惡意程式或所有網路路徑都受這條規則控制。[研究分析](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5#agent-analysis)
+研究者發現，木馬所有的對外通訊都經過啟動器內建的瀏覽器 `tbs_browser.exe`。有玩家回報擋住它之後，被改過的檔案就載不進來；原作者也建議在官方確認修好之前保留這條規則。
 
-### 不開啟啟動器的設定步驟
+先知道它的限制：
 
-1. 完整結束啟動器；先保全前述檢查資料，不要刪快取或 EXE。以檔案總管找到實際安裝位置的 `Launcher\intl_service\tbs_browser.exe`。不同區服、不同安裝副本需分別確認完整路徑。
-2. 開啟「Windows 安全性 → 防火牆與網路保護 → 進階設定」，選「輸出規則 → 新增規則 → 程式」。
-3. 選「這個程式路徑」，瀏覽選取上一步的實際 EXE；選「封鎖連線」。
-4. 勾選網域、私人、公用三種設定檔，給規則一個可辨識的名稱，例如 `NIKKE - Block tbs_browser outbound`。這會修改本機防火牆設定，需具備管理權限；公司管理的設備先遵循 IT 政策。
-5. 在規則內容確認：已啟用、方向為輸出、動作為封鎖、程式完整路徑正確、設定檔全選，且沒有額外縮限到特定遠端位址或連接埠。確認適用的 Windows 防火牆設定檔已啟用。若由其他防火牆產品或組織原則管理，不能假設這份本機規則已生效。
+- 這只是降低風險，**不能清除已經中的木馬**，也擋不到 Chrome 裡常駐 DLL 的連線。
+- 啟動器的網頁畫面（公告等）可能會打不開。
+- 以前就設過這條規則，不等於一定沒中，還是要跑一鍵檢查。
+- 規則是用完整路徑比對，重裝或搬移遊戲後要重新設定。
 
-以上只是設定查核，**不要為測試而重新開啟可疑啟動器**。沒有進行本機封包或受控環境驗證時，不能宣稱已證實阻斷本事件。Windows 程式規則依完整路徑比對，不支援路徑萬用字元；搬移、重裝或更換執行路徑後須重新核對。明確封鎖規則優先於衝突的允許規則，但組織的本機原則合併設定仍可能影響規則是否納入有效政策。[Microsoft 防火牆規則](https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/rules)
+設定方式（需要系統管理員權限，公司電腦請先問 IT）：
 
-### 效果、限制與撤回
+1. 用檔案總管在 NIKKE 安裝資料夾裡搜尋 `tbs_browser.exe`，對它按右鍵，選「複製路徑」。
+2. 以系統管理員身分開 PowerShell，貼上下面這行，把雙引號那一段（含雙引號）換成剛剛複製的路徑：
 
-- 被封鎖的程式仍可能執行或使用 CPU／RAM；不能把文章標題「永遠關閉」當成實際效果。啟動器的網頁、公告或其他功能也可能受影響。
-- 事前正確且持續生效的封鎖，能降低已知內嵌瀏覽器通訊路徑的曝險；**「以前設過規則」不等於 100% 未感染**。仍需核對當時是否使用同一路徑、規則與防火牆是否啟用，以及其他執行／常駐跡證。不要為排除感染而刪除日誌。
-- 規則不能撤回已外洩的資料，也不能清除已植入的 DLL 或限制其他程序。它不是恢復使用 PC 啟動器的充分條件。
-- 需要撤回時，在「輸出規則」找到自己新增的精確名稱，先停用該條即可；不要重設整個防火牆或刪除不相關規則。停用會解除這項額外限制，應在釐清風險及有明確需要後才做。
+```powershell
+New-NetFirewallRule -DisplayName 'NIKKE - Block tbs_browser outbound' -Direction Outbound -Action Block -Program "D:\NIKKE\Launcher\intl_service\tbs_browser.exe"
+```
 
-本節依 Microsoft 規則機制與公開研究整理，尚未在各區服／版本進行實機效果驗證。玩家舊文是操作參考，不是本事件無感染的證明：[巴哈原文](https://forum.gamer.com.tw/C.php?bsn=36390&snA=16463)。
+要撤回這條規則：
+
+```powershell
+Remove-NetFirewallRule -DisplayName 'NIKKE - Block tbs_browser outbound'
+```
+
+## 重新開啟動器前，先刪快取
+
+等官方確認修好，而且一鍵檢查的結果已經截圖存好，再刪快取。刪掉之後，就查不到快取裡的痕跡了。
+
+先從系統匣結束啟動器，再貼上：
+
+```powershell
+Remove-Item "$env:APPDATA\nikke_launcher*\tbs_cache" -Recurse -Force
+```
+
+沒有出現紅字就是刪好了。這只會刪啟動器的網頁快取，不會刪到遊戲和帳號資料。
+
+---
+
+檢查項目依據：[MotherSphere 檢查工具的項目說明](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/checks.md)、[MotherSphere 事件調查](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5)、[巴哈姆特整理文](https://forum.gamer.com.tw/C.php?bsn=36390&snA=23304)。

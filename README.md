@@ -1,78 +1,207 @@
-# NIKKE PC 啟動器木馬檢查表｜Windows 繁體中文版
+# NIKKE PC 啟動器木馬檢查表（Windows）
 
-**如果你在自己那份 NIKKE 啟動器的 `Launcher\intl_service\debug.log` 裡看到 `k2f_chan registered`，先讓那台電腦斷網，改用乾淨的手機或電腦保護帳號。** 這行是已知遠端控制程式執行過的證據。即使日期在 10 月、電腦沒裝 Chrome、沒有找到 DLL，也適用。日誌無法告訴你哪筆密碼真的被取走。[執行指標與樣本分析](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5#check-if-you-are-infected)
+資料更新：2026-11-04 13:00（台灣時間）。事件還在發展，請以官方後續公告為準。
 
-| 你想做什麼 | 從這裡開始 |
+## 先做這三件事
+
+**9/27 之後在電腦上開過 NIKKE 啟動器的人，不管有沒有中，都建議先做：**
+
+1. **官方確認修好之前，不要開 PC 版啟動器。**
+2. **用手機改 NIKKE（Level Infinite）帳號密碼，並登出所有裝置。** 同一組密碼也用在別處的，一起換掉。
+3. **跑一次[一鍵檢查](WINDOWS-CHECKS.md#一鍵檢查)**，照結果決定下一步。
+
+> 為什麼沒中也要改密碼？木馬只在「部分啟動」時才送來，而且會刪掉自己的暫存檔，檢查不出來不代表 100% 沒事，而改密碼的成本很低。研究者 MotherSphere 建議 10/23 之後開過啟動器就改；巴哈整理文更保守，從 9/27 算起。這份表採用 9/27。
+
+**在 `Launcher\intl_service\debug.log` 裡看到 `k2f_chan`，就是中了。** 日期在 10 月、沒裝 Chrome、找不到 DLL，都一樣算。直接看[中毒了怎麼辦](#中毒了怎麼辦)。
+
+| 我想… | 看這裡 |
 |---|---|
-| 自己查 Windows | [圖形介面位置與可複製的唯讀 PowerShell 指令](WINDOWS-CHECKS.md) |
-| 請有本機工具權限的 AI 助手協助 | [提示詞一：唯讀檢查；提示詞二：依報告處置](AGENT-PROMPT.md) |
-| 已確定執行過 | 先看下方「受害後的處置順序」。帳號止損和主機復原可以同時進行。 |
+| 自己檢查 | [WINDOWS-CHECKS.md](WINDOWS-CHECKS.md)：一鍵檢查、手動檢查、封鎖網域 |
+| 請 AI 助手幫忙 | [AGENT-PROMPT.md](AGENT-PROMPT.md)：可直接複製的提示詞 |
+| 已經確定中了 | [中毒了怎麼辦](#中毒了怎麼辦) |
 
-本表涵蓋 2026 年 NIKKE **PC 啟動器**事件，指令適用於 Windows。資料核對至 **2026-11-04 上午（台灣時間，UTC+8）**。依據玩家保留的紀錄、研究者取得的快取與樣本，以及官方公開說明整理。
+## 發生了什麼事
 
-**官方已回應，影響範圍仍在調查。** 國際版官方於 11 月 4 日公告，PC 啟動器腳本可能遭第三方竄改，並稱已在 **11 月 4 日約 02:30（UTC+9，即台灣 01:30／11 月 3 日 17:30 UTC）** 實施客戶端修正及更新；影響範圍仍在調查，後續處置將另行公告。這份公告未列完整受影響區服／版本、入侵根因或受害機清除驗證，不能據此認定所有節點、舊快取或已感染設備都已安全。下方保留各研究者在特定時間的觀察，與官方說明分開判讀。[國際版官方 PC 啟動器異常公告](https://x.com/NIKKE_en/status/2117817602659770434)
+NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Level Infinite 的 CDN 載入 JavaScript。9/27 有人改了 CDN 上的 4 個 JS 檔（檔名沒變），讓啟動器多去載入 `insightjs[.]com` 的腳本。有些啟動時，攻擊者會再送來一個遠端控制木馬，用啟動器的下載功能下載並執行。
 
-復用前仍須核對適用區服、版本與後續處置通知。[台港澳官方公告](https://nikke.hotcool.tw/news.html) · [國際版官方公告](https://nikke-en.com/news.html)
+- **只要開啟動器就可能中。** 不用點廣告、不用登入遊戲，跟有沒有裝 Chrome 也無關。
+- **不是每次都中。** 有人開了約 19 次，中了 3 次。所以同樣有開，有人中、有人沒中。
+- **木馬在啟動器開著時能做的事：** 執行任何指令、讀檔、截圖，偷 NIKKE 帳密、各家瀏覽器（Chrome、Edge、Firefox 等）存的密碼和登入 Cookie、SSH 與 API 金鑰、加密錢包資料。部分電腦還被裝上寄生在 Chrome 的常駐 DLL。
+- **紀錄只能證明木馬跑過**，看不出哪些資料被拿走了。
 
-**為什麼只開啟動器就可能中？** 正版啟動器內建網頁介面，會自動取得官方配送的 JavaScript。研究者發現其中的檔案被加入程式碼，會再向外部網域取腳本，利用啟動器提供的本機下載功能取得 Lua 遠控程式。後續是否下載、啟動或設定常駐，可以分別留下不同的跡證；看到其中一項時，就依該項能證明的範圍處理。[攻擊路徑與證據來源](https://github.com/WormW/nikke_malware_analysis/blob/main/docs/attack-path.md)
+### 官方說法
 
-## 10 月的紀錄也算嗎？
+11/4 官方承認啟動器腳本「可能被第三方竄改」，說已在 **11/4 01:30（台灣時間）左右** 完成客戶端修復與更新，影響範圍還在確認，後續處理方式會另外公告。國際版發在 [X](https://x.com/NIKKE_en/status/2117817602659770434)，台港澳官方粉絲團同日也有發布（[巴哈整理文](https://forum.gamer.com.tw/C.php?bsn=36390&snA=23304)有引用全文）。
 
-| 時間（台灣） | 已知事件 | 怎麼用來判讀 |
-|---|---|---|
-| 9 月 27 日 | 研究者將 Level Infinite 官方 CDN 上四份被改動的 JavaScript 追溯至這天 | 能說明攻擊腳本何時開始配送，不能據此認定所有玩家當天就執行木馬。 |
-| **10 月 24 日 00:40** | 研究者彙整到的最早木馬啟動回報，原時間為 **10 月 23 日 16:40 UTC** | 這是目前公開回報的下限。另有 Windows 玩家貼出相符的 10 月執行序列。 |
-| 11 月初 | 更多玩家發現跡證。研究者比對出不同時間投遞的程式版本；部分開啟啟動器的時段沒有收到木馬 | 11 月才被廣泛注意，無法用來排除之前的感染。 |
-| 11 月 4 日約 01:30（官方所述更新時間） | 官方在同日公告中稱，已實施客戶端修正及更新；原文時間為 02:30 UTC+9 | 影響範圍仍在調查，並非受害機已清理或全面安全復用的證明。[官方公告](https://x.com/NIKKE_en/status/2117817602659770434) |
-| 11 月 4 日 06:26、10:01–10:07 | MotherSphere 於 06:26 仍見兩個 CDN 節點送出舊 `FeedList`；WormW 於 10:01–10:07 複核時，仍從官方網址取得相同惡意檔案 | 這些是研究者當時的取樣結果，不能當作全區服／全節點的狀態。不要重開啟動器測試。 |
+官方修好的是「以後」不會再被感染。**之前已經中的電腦，不會因為更新就變乾淨。**
 
-**11 月 4 日上午的供應端複核。** WormW 在 **02:01–02:07 UTC（台灣 10:01–10:07）** 重取三份官方檔案，所取的 `aegis-fix.min.js`、`images.7fec4c32.js` 未見已知載入器特徵，但 `FeedList.feb647c9.js` 仍與已知惡意版本的 SHA-256 相符，且不同請求曾取得不同版本。這是晚於官方所述更新時間的研究者取樣結果；官方更新說明與這次 CDN 觀察各有範圍，不能合併解讀為所有檔案、節點或既有感染都已處理。保留證據、暫停使用啟動器與復用前處理本機舊快取的原則不變。[WormW 複核紀錄（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)
+### 時間線（台灣時間）
 
-例如，在確認是 2026 年的日誌裡，`[1030/…] "k2f_chan registered"` 表示 **10 月 30 日當次已執行**。前四碼通常是月日，行首多半沒有年份或時區。若看到比 10 月 24 日更早的命中，請保留原始紀錄、核對系統時間與年份，並用同時段的下載紀錄或木馬狀態交叉驗證。不要因為早於已公布案例就忽略，也不要只用單一時間戳改寫整體事件時間線。[事件時間線](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/incident.md#timeline) · [10 月 Windows 個案](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6455530#gistcomment-6455530)
-
-## 五項檢查怎麼看
-
-- [ ] **① 啟動器日誌。** 用當時玩遊戲的 Windows 帳戶及實際安裝目錄。看 `Launcher\intl_service\debug.log` 是否涵蓋遊玩日期，找完整的 `k2f_chan registered`。沒有後續 `adopted` 也算；單獨的 `startup already in progress` 不夠。台港澳版和國際版若分開安裝，要分別查。
-- [ ] **② 特徵檔案。** 在 `%LOCALAPPDATA%\Google\Chrome\User Data\PlatformExperienceHelper\` 下找「**64 位十六進位字元子目錄**內含 **platform_experience_helper.dll**」。父目錄、名稱相近的 Metrics 資料夾、正常的 EXE 都可能合法。木馬可自行建立目錄，沒裝 Chrome 一樣要查。
-- [ ] **③ 目前使用者的登錄檔。** 查 `HKCU\Software\Classes\CLSID\{E77CC89B-7401-4C04-8CED-149DB35ADD04}\InprocServer32` 的預設值。若指向②的實際檔案，代表已設定已知常駐方式。64 位元 Windows 查兩個登錄檢視。保留指向系統 `wpc.dll` 的正常 HKLM 項目。
-- [ ] **④ 雜湊比對（選做）。** 只對精確路徑的候選 DLL 計算 SHA-256，保留於本機。不同受害機的 DLL 可能含不同識別資料，雜湊不必相同。單一公開樣本對不上，仍要依檔案位置、登錄指向和執行紀錄判讀。
-- [ ] **⑤ DNS 與防毒歷史。** 在實際開啟遊戲的時段，核對查詢來自哪台主機、命中哪條規則、回覆內容，以及 Defender 當時對哪個檔案採取何種動作。解析成功無法證明木馬已執行；目前快取空白或防毒無告警也不能排除。
-
-**第一步沒命中或日誌不完整時，再補查啟動器自己的資料。** 國際版從 `%APPDATA%\nikke_launcher\tbs_cache` 找起，台港澳版通常用 `nikke_launcher_hmt`。在 `Code Cache\js\` 內找到本案外部腳本 URL 是接觸跡象；在 `Local Storage\leveldb\` 內找到真正的 `k2f.agent.state` 狀態紀錄，則是木馬運行過的強證據。遊戲目錄的 `Launcher\log\tinyget\` 可用來分辨「嘗試下載」和「成功下載」。**先保留證據再清快取**，自行移除遊戲後也值得查 AppData。[巴哈 11/4 修訂版](https://forum.gamer.com.tw/C.php?bsn=36390&snA=23304) · [逐項操作與限制](WINDOWS-CHECKS.md)
-
-## 查完後，依最強的證據採取行動
-
-| 結果 | 能確定什麼 | 現在做什麼 |
-|---|---|---|
-| 日誌缺失、重裝後才有、查錯帳戶或無權讀取 | 關鍵時段的狀態不明 | 保留其他來源並補查。如果當時用過高價值帳號，優先從乾淨裝置檢查登入活動。 |
-| 日誌有涵蓋，且多項交叉檢查均無跡證 | 目前未見這支木馬的已知跡證 | 依官方後續公告復用。不因單純玩過 PC 版就要求重灌。 |
-| 只有腳本快取、DNS 查詢或一次攔截 | 有接觸或嘗試連線的跡象；DNS 攔截只證明該次查詢被擋 | 暫停使用 PC 啟動器，核對有沒有下載成功、執行或常駐。 |
-| `insight.bundle` 已從本案網址成功下載，尚未找到啟動證據 | 惡意程式已送達，執行狀態未明 | 按高風險處理，先隔離、保留證據，補查同時段日誌及 LevelDB。涉及工作憑證時直接通知資安窗口。 |
-| `k2f_chan registered` 或實際木馬狀態紀錄 | 遠控程式已在這台電腦運行 | 立即斷網，依下一節保護主機及帳號。DLL 缺席不影響這個判定。 |
-| 精確 DLL 與 HKCU 指向吻合 | 已設定已知常駐機制；單憑設定仍不能斷言哪個程序載入了它 | 同上，並保留登錄檢視、檔案位置與雜湊。只有 DLL 或殘留指向時也應當作強烈異常查證。 |
-
-**沒有 Chrome 的情況。** 攻擊從 NIKKE 內建瀏覽器進入，第一階段已有讀檔、截圖和執行指令的能力。樣本能讀取 Edge、Firefox 等瀏覽器資料。有 Windows 玩家僅安裝 Edge 與 Firefox，啟動器留下兩次木馬運行紀錄，卻無特徵 DLL 或對應登錄項目。上表的分級不取決於你預設用哪個瀏覽器。[樣本逆向分析](https://github.com/WormW/nikke_malware_analysis/blob/main/docs/attack-path.md) · [無 Chrome 的實機回報](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6455805#gistcomment-6455805)
-
-## 受害後的處置順序
-
-1. **隔離。** 手動拔網路線或關 Wi-Fi，停止使用該機登入服務。若電腦歸公司管理或存有公司憑證，先聯絡 IT／資安，讓負責人決定如何保存證據與重啟。已離線的機器可以照著手動清單檢查；不要為了讓雲端助手連上而讓受害機恢復連網。
-2. **在另一台可信裝置保護帳號。** 先保護主要信箱與帳號復原方式，其次是 NIKKE／Level Infinite、瀏覽器儲存過的密碼及重要服務。使用全新且不重複的密碼，逐一登出所有裝置／撤銷工作階段，檢查近期登入、陌生裝置、信箱轉寄規則及 MFA 設定。被複製的登入 Cookie 可能繼續有效。
-3. **依這台電腦原本放過什麼來輪替。** 開發者撤銷舊 Git 權杖、API 金鑰與 SSH 公鑰授權，再核發新憑證並檢查使用紀錄。如果錢包助記詞或私鑰可能曝光，應由本人在可信裝置產生新錢包並處理資產。任何人或助手都不需要取得你的密碼、助記詞或新金鑰。
-4. **保全與復原。** 記下命中來源、當地時間與時區、檔案雜湊及相關 HKCU 檢視。原始日誌和 LevelDB 可能含主機名、UUID 和敏感狀態，請留在本機或私有離線備份，分享時只給去識別摘要。木馬能執行任意指令，**確認執行後，要重新信任主機，較穩妥的方案是用可信安裝媒體全新安裝 Windows**。先備份必要個人文件，確認可讀，避免還原舊執行檔、整個瀏覽器設定檔或啟動器快取。[Microsoft 復原選項](https://support.microsoft.com/zh-tw/windows/experience/backup-recovery/recovery-options-in-windows)
-5. **若先選擇手動移除已知常駐。** 記錄並核實 HKCU 預設值和 DLL 互相吻合 → 移除該使用者檢視的惡意登錄指向 → 保持離線重新開機 → 只移除含特徵 DLL 的精確 64 碼子目錄 → 重新查兩個登錄檢視和檔案。保留 Chrome 正常父目錄及 Windows 的 HKLM 項目。此流程只處理已知機制。Defender 完整／離線掃描可輔助複查，但單次掃描不能驗證歷史外傳或排除其他程式被植入。
-6. **重新啟用前。** 核對適用區服、版本及官方後續處置通知；11 月 4 日的初步更新公告本身不能驗證受害機已清理。保留證據後，再依修復指引處理該版本的啟動器快取。追蹤帳號活動、金鑰使用與未授權交易。重灌無法使已被複製的密碼、Cookie 或私鑰失效。[事件處置依據](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/what-to-do.md)
-
-## AdGuard Home 是否曾擋住攻擊？
-
-開啟 AdGuard Home 的 **Query Log／查詢紀錄**，選當時遊戲電腦的用戶端 IP 或名稱，將時間對準啟動器紀錄，搜尋 `insightjs`。若路由器代全家轉送 DNS，先確認日誌能否區分是哪台機器。只需本機比對，請勿造訪可疑網域或為了驗證再開遊戲。
-
-| 歷史查詢結果 | 判讀 |
+| 日期 | 發生什麼 |
 |---|---|
-| `insightjs[.]com` 明確顯示已封鎖並有命中規則；如曾查備援 `insightjs[.]org` 也被擋 | 支持當次外部腳本的解析遭阻擋。多個開啟時段都吻合，歸因更有把握。 |
-| 主網域放行，`analytics.insightjs[.]com` 被擋 | 腳本可能已載入，但已知下載或後續通訊的網域在那次查詢被擋。 |
-| 回傳當時的真實 IP | 該次 DNS 放行。若顯示 `NOERROR`，還要看實際回覆與封鎖原因，因為阻擋頁或 `0.0.0.0` 也可能使用這個回應碼。 |
-| 沒紀錄、過期、只查了今天的規則 | 無法據此重建當天。其他 DNS 伺服器（包括路由器提供的 IPv6 DNS）可能讓查詢不經 AdGuard Home；本機已快取的 DNS 回覆也未必產生新查詢。 |
+| 9/27 | `insightjs[.]com` 被註冊；同一天 CDN 上 4 個 JS 檔被改 |
+| 10/24 00:40 | 目前公開最早的木馬執行紀錄。另有玩家回報 9/30、10/15 的 DNS 紀錄就出現這個網域，實際開始時間可能更早 |
+| 10/28 | `FeedList.feb647c9.js` 在源站被清掉，但部分 CDN 節點還在送舊檔 |
+| 11/4 01:04–01:21 | 另外 3 個被改的檔案換回乾淨版本 |
+| 11/4 02:31 | 攻擊者的木馬伺服器停止回應 |
+| 11/4 06:26、10:01–10:07 | 研究者仍從部分 CDN 節點拿到被改過的 `FeedList.feb647c9.js` |
+| 11/4 11:13 | 國際版官方在 X 發布公告 |
 
-**DNS 紀錄有盲點。** MotherSphere 彙整的一台已出現 `k2f_chan registered` 的 PC，Pi-hole 沒有 `analytics.insightjs[.]com` 紀錄；玩家後來發現系統同時列有路由器的 IPv6 DNS。研究者提醒，Pi-hole、AdGuard Home 或 NextDNS 只看得到送到它們的查詢；若路由器再轉送，也可能記在路由器名下。核對當時的 DNS 路徑及用戶端歸屬，**不要用網域未命中來否定本機的執行證據**。目前設定只能輔助，不能還原整段歷史。[研究者對 DNS 盲點的說明](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6455933#gistcomment-6455933)
+木馬伺服器停了，現在的風險比前幾天低。但 CDN 還沒完全清乾淨，`insightjs[.]com` 也不在官方手上，**還是先別開啟動器**。
 
-訂閱多份惡意網域及釣魚清單確實可能擋下其中一段。已有人回報 11/1 使用 AdGuard Home 時，根網域成功解析到當時攻擊伺服器，啟動器有腳本快取卻未見木馬執行指標。要確認**是 DNS 保住哪一次啟動**，看那台機器當時的命中規則和回覆；要判斷**木馬有沒有跑過**，看主機跡證。[AdGuard Home 設定與記錄保留](https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration) · [玩家的 AdGuard Home 紀錄](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6455812#gistcomment-6455812)
+## 結果怎麼判讀
+
+[一鍵檢查](WINDOWS-CHECKS.md#一鍵檢查)最後一行會顯示結果：
+
+| 結果 | 代表什麼 | 怎麼做 |
+|---|---|---|
+| **中毒** | 木馬在這台電腦跑過 | 照下面的[中毒了怎麼辦](#中毒了怎麼辦)處理 |
+| **有接觸** | 啟動器載入過攻擊腳本，但沒找到木馬執行的痕跡 | **帳號照中毒處理**（第 2、3 步）。電腦本身沒有中毒證據，不用急著重灌 |
+| **資料不足** | 找不到 `debug.log`、重裝過，或紀錄沒涵蓋你玩的日期 | 無法判斷，帳號照「有接觸」處理 |
+| **沒找到已知痕跡** | 已知的痕跡都沒出現 | 做完[先做這三件事](#先做這三件事)，等官方公告 |
+
+**以下任何一項出現，就算中毒：**
+
+- `debug.log` 裡有 `k2f_chan`、`lua downloaded to` 或 `agent started as`
+- 安裝資料夾的 `Launcher\log\` 裡出現 `insight.bundle`、`analytics.insightjs.com`，或有 `k2f.lua`、LuaJIT 格式的檔案
+- 啟動器資料 `%APPDATA%\nikke_launcher*` 裡出現 `k2f_chan` 或 `k2f.agent`（例如 `k2f.agent.state`），或連線紀錄裡有 `analytics.insightjs.com`
+- 登錄檔有 `HKCU\Software\Classes\CLSID\{E77CC89B-7401-4C04-8CED-149DB35ADD04}`。**就算是空的也算**，因為木馬自己的清除指令只會清空、不會刪掉
+- 瀏覽器資料夾的 `PlatformExperienceHelper` 底下有 64 碼英數字的子資料夾（**裡面沒有 DLL 也算**），或有 `platform_experience_helper.dll`
+- `%TEMP%` 裡有 `k2f` 開頭的檔案
+
+**只有下面這些，算「有接觸」：** 啟動器快取裡有 `insightjs`、DNS 紀錄查過 `insightjs[.]com`。
+
+## 中毒了怎麼辦
+
+帳號和電腦可以同時處理，不用等電腦清完才改密碼。
+
+### 1. 隔離電腦
+
+拔網路線或關 Wi-Fi。在右下角系統匣對啟動器按右鍵，選結束。之後不要再用這台電腦登入任何服務。如果是公司電腦，或電腦裡有公司帳號、憑證，先找公司 IT。
+
+### 2. 用手機或另一台乾淨的電腦處理帳號
+
+照這個順序：
+
+1. **主要信箱**（Google、Outlook 等）：它能拿來重設其他帳號，最優先。
+2. **NIKKE／Level Infinite 帳號**。
+3. **這台電腦瀏覽器存過密碼的帳號**：Discord、Steam、網路銀行等。
+
+每個帳號都要：
+
+- 換一組新的、沒在別處用過的密碼
+- **登出所有裝置**。偷走的登入 Cookie 不用密碼也能登入，只改密碼不夠
+- 開啟兩步驟驗證
+- 看一下最近的登入紀錄，以及信箱有沒有被加上自動轉寄
+
+### 3. 換掉金鑰和錢包
+
+- **有寫程式的人**：撤銷並重新產生 SSH 金鑰、Git Token 和各種 API 金鑰（OpenAI、Anthropic、AWS、GitHub 等）。
+- **在這台電腦用過 AI 工具的人**（Claude、ChatGPT、Codex 等）：登出那個工具，並換掉它的 API 金鑰。
+- **有加密貨幣的人**：在乾淨的裝置建立新錢包（新的助記詞），把資產轉過去。
+
+### 4. 清理電腦
+
+動手前，先把一鍵檢查的結果截圖存下來。
+
+**最保險的做法是重灌 Windows。** 木馬能執行任何指令，沒人知道攻擊者當時還做了什麼。先備份個人檔案（照片、文件），不要備份舊的程式、整個瀏覽器設定或啟動器快取，再用可信的安裝媒體重灌。
+
+暫時不重灌的話，至少要移除已知的常駐（全程保持離線）：
+
+1. 刪除登錄機碼 `HKCU\Software\Classes\CLSID\{E77CC89B-7401-4C04-8CED-149DB35ADD04}`（整個機碼）。`HKCU\Software\Classes\WOW6432Node\CLSID\` 底下如果也有同一個，一起刪掉。**`HKLM` 底下同一個 CLSID 是 Windows 自己的（指向 `wpc.dll`），不要動。**
+2. 重新開機。DLL 使用中會被鎖住，重開才刪得掉。
+3. 刪除 `PlatformExperienceHelper` 底下那個 64 碼的子資料夾。**只刪那個子資料夾**，不要刪整個 `PlatformExperienceHelper`；裡面的 `platform_experience_helper.exe`、`LoadFeatures` 是 Chrome 正常的檔案。一鍵檢查如果有列出「舊版常駐檔案」，也一起刪掉。
+4. 再跑一次一鍵檢查，確認都清掉了。
+
+Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不代表沒事**。手動移除也只處理已知的部分；攻擊者如果另外裝了別的東西，只有重灌才能確定清掉。
+
+### 5. 重新使用啟動器之前
+
+- 等官方公告確認修好，並說明影響範圍。
+- 先刪掉啟動器快取 `%APPDATA%\nikke_launcher*\tbs_cache`，裡面可能還留著被改過的檔案。[刪除指令在這裡](WINDOWS-CHECKS.md#重新開啟動器前先刪快取)。
+- 之後幾週多留意帳號的登入紀錄和金融交易。
+
+## 沒中也建議做的預防
+
+- 做完[先做這三件事](#先做這三件事)。
+- **封鎖攻擊用的網域和 IP**：網域 `insightjs.com`、`analytics.insightjs.com`、`insightjs.org`，IP `89.127.233.127`、`89.126.250.172`。用 hosts 檔、AdGuard Home 或路由器都可以，[做法在這裡](WINDOWS-CHECKS.md#封鎖攻擊用的網域和-ip)。
+- **重新開啟動器之前，先刪 `tbs_cache`。**
+- 選用：用 Windows 防火牆擋住 `tbs_browser.exe` 的對外連線，[做法在這裡](WINDOWS-CHECKS.md#選用擋住-tbs_browserexe-的對外連線)。
+
+## 常見問題
+
+### 我的 `k2f_chan` 是 10 月的，比大爆發還早，也算嗎？
+
+算。目前公開最早的執行紀錄是 10/24，實際可能更早。
+
+`debug.log` 的紀錄長這樣：
+
+```text
+[1101/012037.043:INFO:CONSOLE(1)] "k2f_chan registered", source: (1)
+```
+
+`1101/012037` 就是 11 月 1 日 01:20:37（電腦的當地時間），紀錄裡沒有年份。如果看到比 10/24 還早的紀錄，請保留原檔，對照系統時間確認年份。
+
+### 我沒裝 Chrome，是不是就沒事？
+
+不是。木馬是在 NIKKE 啟動器自己內建的瀏覽器裡執行，跟你有沒有裝 Chrome 無關。有玩家只裝了 Edge 和 Firefox，`debug.log` 照樣有兩次執行紀錄。
+
+大家說 Chrome 是重災區，是因為木馬有專門偷 Chrome 密碼和錢包的功能，常駐 DLL 也是寄生在 Chrome 上。但它一樣會偷 Edge、Firefox 的資料，也會自己建立放 DLL 的 Chrome 資料夾。沒用 Chrome，只是少了一部分損失。
+
+### 只有 `k2f_chan`，沒有 DLL 和登錄檔，算比較輕嗎？
+
+不算。偷資料在啟動器裡就能做完，DLL 只是後續用來常駐的手段。有沒有裝上 DLL，帳號都一樣要處理。
+
+### 我家用 AdGuard Home，看得出是不是它擋下來的嗎？
+
+打開 AdGuard Home 的「查詢紀錄」，選那台電腦，對準你開遊戲的時間，搜尋 `insightjs`：
+
+| 查到什麼 | 代表什麼 |
+|---|---|
+| `insightjs.com` 被封鎖 | 那次啟動時，攻擊腳本的來源被擋住了。每次遊玩的時間都吻合的話，更有把握 |
+| `insightjs.com` 放行，`analytics.insightjs.com` 被封鎖 | 攻擊腳本可能已經載入，但下載木馬那一步被擋了 |
+| 回應了真實 IP（放行） | 那次 DNS 沒擋，要看電腦上的痕跡 |
+| 完全沒紀錄 | 無法判斷。查詢可能走了別的 DNS（例如路由器發的 IPv6 DNS）、用了快取，或紀錄已經過期 |
+
+有兩件事要知道：
+
+- **DNS 沒紀錄，不能推翻電腦上的中毒痕跡。** 有一台已經中毒的電腦，Pi-hole 上完全沒有 `analytics.insightjs.com` 的紀錄，後來才發現它同時在用路由器發的 IPv6 DNS。
+- **沒中不一定是 DNS 的功勞。** 有人 11/1 用 AdGuard Home，DNS 放行了攻擊網域，結果也沒中，可能只是伺服器那幾次沒送木馬。
+
+另外，可以在 AdGuard Home 的「自訂過濾規則」加上 `||insightjs.com^` 和 `||insightjs.org^`，連子網域一起擋掉。
+
+### 可以請 AI 幫我查嗎？
+
+可以，用 [AGENT-PROMPT.md](AGENT-PROMPT.md) 的提示詞。但要注意：
+
+- **已經確定中毒的電腦，不要為了用 AI 而重新連網。** 改用一鍵檢查，不用連網也能跑。
+- 在中毒電腦上用過的 AI 工具，要登出並換掉金鑰。
+- 不要把完整的紀錄或 AI 的報告貼到網路上，裡面有你的使用者名稱和電腦名稱。
+
+### 其他 Level Infinite 遊戲也會中嗎？
+
+目前沒有證據。網路上流傳「Level Infinite 旗下 PC 遊戲都要警戒」的清單，以及「王者榮耀、三角洲行動也確認中了」的說法，都沒有附來源。
+
+- 研究者 MotherSphere、WormW 和 Inven Global 的報導，都只發現 NIKKE 受影響。Inven 的說法是：目前沒有證據顯示其他遊戲的啟動器被用同樣的方式入侵。
+- 這次的木馬要靠 NIKKE 啟動器內建瀏覽器的本機功能才能下載、執行，研究者確認它只在 NIKKE 啟動器裡運作。
+- 那份清單把騰訊投資的工作室和 Level Infinite 發行的遊戲混在一起。例如 Valorant 是 Riot 的遊戲，《鳴潮》是庫洛自己營運。
+
+不過有兩點還不確定：
+
+- 4 個被改的檔案裡，有 2 個放在共用路徑 `/comm/assets/lib/` 底下，研究者提醒同一個儲存空間的其他檔案也可能被改過。攻擊者怎麼拿到 CDN 權限、範圍是不是只有 NIKKE，官方都還沒說明。
+- 木馬會偷 NIKKE 的登入資料。其他遊戲如果也用同一個 Level Infinite 帳號，那些遊戲的帳號一樣有風險，改 NIKKE 密碼時就一起處理了。
+
+所以目前不用跟著停玩其他遊戲，但 Level Infinite 帳號的密碼要改，並留意官方後續公告。
+
+### 手機版、Linux／Steam Deck 呢？
+
+目前沒有手機版出事的回報，但官方也還沒確認安全。用 Linux 或 Steam Deck（Proton）跑 PC 版的一樣會中，不過這份表的指令只適用 Windows，請看 [MotherSphere 的檢查工具說明](https://github.com/MotherSphere/NIKKE-Launcher-Check)。
+
+## 資料來源
+
+- [MotherSphere 事件調查](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5)：痕跡、時間線、處置建議
+- MotherSphere [NIKKE-Launcher-Check](https://github.com/MotherSphere/NIKKE-Launcher-Check)：[事件細節](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/incident.md)、[處置方式](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/what-to-do.md)、[檢查項目](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/checks.md)
+- [WormW 樣本分析](https://github.com/WormW/nikke_malware_analysis)：攻擊路徑、[11/4 CDN 複查](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)
+- [巴哈姆特整理文（11/4 更新）](https://forum.gamer.com.tw/C.php?bsn=36390&snA=23304)
+- [國際版官方 X 公告](https://x.com/NIKKE_en/status/2117817602659770434)、[台港澳官方公告頁](https://nikke.hotcool.tw/news.html)、[國際版官方公告頁](https://nikke-en.com/news.html)
+- [Inven Global 報導](https://www.invenglobal.com/articles/28122/is-my-pc-infected-nikke-launcher-tampering-concerns-from-attack-vector-to-remediation)
