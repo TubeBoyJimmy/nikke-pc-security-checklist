@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-05 01:47（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-05 02:52（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -94,6 +94,14 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 - **LevelDB 修正不代表所有 HTTP 快取都已解壓檢查。** 一位[玩家回報](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5#gistcomment-6457040)，純文字搜尋未命中，解壓 HTTP Cache 的 gzip 內容後才找到污染的 `FeedList` 與 `images`；這是**尚未獨立核驗原始快取的單機觀察**。靜態核對 [v0.5.1 快取掃描](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/0e09c7c422c48103856a933a3b910b51ba7b83da/src/scan.rs#L632-L686)，該段只對 `.ldb` 做解析，其餘仍搜尋原始位元組。因此不能把「純文字沒命中」或「已支援 LevelDB 解壓」當作 HTTP 快取已完整排除的證明。
 
 先保存快取與報告，不要為了驗證而重新開啟啟動器。**以上限制不會推翻實際日誌中的 `k2f_chan registered`、已確認的惡意 DLL 等具體跡證。** 本次只補充待核實資訊，既有腳本與判定未修改。
+
+### 早期投遞腳本的證據界限
+
+**11/5 補充研究限制，並非新增感染案例。** [MotherSphere 原留言](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6456552)指出，該討論中尚無人公開早期負責選擇下載位置、投遞木馬的 `l.js`。[WormW 固定版本分析](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/docs/attack-path.md#0-证据来源与结论边界)取得的 9,145 bytes 副本，是 **11/4 01:30（台灣時間）後被換成的 `/speed` 分析版本，不是早期惡意投遞版**。不能用這份事後副本證明先前腳本沒有其他功能。
+
+MotherSphere 表示，該討論已貼出的 `insight.bundle` 下載網址都指向 `analytics.insightjs.com`，尚無其他主機或 IP 投遞的回報；但缺少當時的 `l.js`，**仍不能完整排除其他投遞路徑**。已知紀錄支持透過 `Srv_DownloadFile` 下載後，木馬隨即在啟動器內執行；具體由哪個原生橋呼叫觸發執行，仍未確認。
+
+這是公開證據的缺口，**不是已證實初始腳本能獨立竊密，也不能只憑接觸紀錄改判感染**。請保留現有日誌與快取；本次不改動既有腳本、感染判定或處置步驟。
 
 ## 結果怎麼判讀
 
