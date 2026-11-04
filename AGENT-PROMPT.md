@@ -30,7 +30,7 @@
 2. 讀 <安裝資料夾>\Launcher\intl_service\debug.log：
    - 回報最早和最晚的時間戳（格式是 [MMDD/HHMMSS.mmm:...]，沒有年份），確認有涵蓋我玩的日期。
    - k2f_chan、agent started as = 中毒（證明木馬跑過）。
-   - lua downloaded to、insight.bundle、analytics.insightjs.com = 高風險（連到木馬伺服器或下載過木馬，不能單獨證明木馬跑過）。回報該行有沒有 http_code=0 或 0 bytes 這類下載失敗的字樣。
+   - lua downloaded to、insight.bundle、analytics.insightjs.com = 高風險（發現請求或下載的跡證，成功與否待核對，不能單獨證明木馬跑過）。回報該行有沒有 http_code=0 或 0 bytes 這類下載失敗的字樣。
    - 只出現 insightjs = 有接觸。
 3. 搜尋 <安裝資料夾>\Launcher\log\ 底下所有檔案（包含 tinyget.mem.log）：
    - 出現 insight.bundle、analytics.insightjs.com，或 ETag 以 -3214f" 結尾 = 高風險。一樣回報下載是否失敗。
@@ -69,7 +69,7 @@
    - 高風險：一樣先提醒我斷網，帳號照中毒處理（第 4 步）。電腦先補查執行痕跡；找到就照中毒處理，沒找到的話把重灌列為最保險的選項，由我決定。
    - 有接觸／資料不足：電腦先不用清理，但帳號照中毒處理（第 4 步）。
    - 沒找到已知痕跡：提醒我用手機改 NIKKE 密碼並登出所有裝置，然後跳到第 5 步。
-2. 動手前，建議我把檢查結果截圖，或存到本機（不要存到雲端同步資料夾）。
+2. 動手前，建議我把檢查結果截圖。有疑點、檢查不完整或要交給 IT 時，提議把 debug.log、Launcher\log、tbs_cache 複製到我指定的離線位置（不要放雲端同步資料夾），並說明裡面可能有主機名稱和登入資料，經我同意才複製。
 3. 中毒時的電腦處理：
    - 先建議最保險的方式：備份個人檔案後，用可信的安裝媒體重灌 Windows。
    - 如果我選擇先手動移除已知常駐：(a) 刪除 HKCU\Software\Classes\CLSID\{E77CC89B-7401-4C04-8CED-149DB35ADD04} 整個機碼（32 位元檢視也有的話，一起刪）→ (b) 請我保持離線並重新開機 → (c) 只刪除報告列出的 64 碼子資料夾和舊版常駐檔案 → (d) 重新跑一次唯讀檢查確認。
