@@ -19,7 +19,9 @@
 | 9 月 27 日 | 研究者將 Level Infinite 官方 CDN 上四份被改動的 JavaScript 追溯至這天 | 能說明攻擊腳本何時開始配送，不能據此認定所有玩家當天就執行木馬。 |
 | **10 月 24 日 00:40** | 研究者彙整到的最早木馬啟動回報，原時間為 **10 月 23 日 16:40 UTC** | 這是目前公開回報的下限。另有 Windows 玩家貼出相符的 10 月執行序列。 |
 | 11 月初 | 更多玩家發現跡證。研究者比對出不同時間投遞的程式版本；部分開啟啟動器的時段沒有收到木馬 | 11 月才被廣泛注意，無法用來排除之前的感染。 |
-| 11 月 4 日凌晨至早上 | 研究者觀察到三份 JS 已被替換，但 06:26 仍有兩個 CDN 節點送出另一份舊檔 | 舊快取與已受害電腦仍須分別處理。不要重開啟動器測試。 |
+| 11 月 4 日 06:26、10:01–10:07 | MotherSphere 於 06:26 仍見兩個 CDN 節點送出舊 `FeedList`；WormW 於 10:01–10:07 複核時，仍從官方網址取得相同惡意檔案 | 這些是研究者當時的取樣結果，不能當作全區服／全節點的狀態。不要重開啟動器測試。 |
+
+**11 月 4 日上午的供應端複核。** WormW 在 **02:01–02:07 UTC（台灣 10:01–10:07）** 重取三份官方檔案，所取的 `aegis-fix.min.js`、`images.7fec4c32.js` 未見已知載入器特徵，但 `FeedList.feb647c9.js` 仍與已知惡意版本的 SHA-256 相符，且不同請求曾取得不同版本。這是研究者的觀察，並非營運方宣布全面修復；也不能據此判定其他檔案、CDN 節點或既有感染已處理。保留證據、暫停使用啟動器與復用前處理本機舊快取的原則不變。[WormW 複核紀錄（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)
 
 例如，在確認是 2026 年的日誌裡，`[1030/…] "k2f_chan registered"` 表示 **10 月 30 日當次已執行**。前四碼通常是月日，行首多半沒有年份或時區。若看到比 10 月 24 日更早的命中，請保留原始紀錄、核對系統時間與年份，並用同時段的下載紀錄或木馬狀態交叉驗證。不要因為早於已公布案例就忽略，也不要只用單一時間戳改寫整體事件時間線。[事件時間線](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/incident.md#timeline) · [10 月 Windows 個案](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6455530#gistcomment-6455530)
 
@@ -64,6 +66,8 @@
 | `insightjs[.]com` 明確顯示已封鎖並有命中規則；如曾查備援 `insightjs[.]org` 也被擋 | 支持當次外部腳本的解析遭阻擋。多個開啟時段都吻合，歸因更有把握。 |
 | 主網域放行，`analytics.insightjs[.]com` 被擋 | 腳本可能已載入，但已知下載或後續通訊的網域在那次查詢被擋。 |
 | 回傳當時的真實 IP | 該次 DNS 放行。若顯示 `NOERROR`，還要看實際回覆與封鎖原因，因為阻擋頁或 `0.0.0.0` 也可能使用這個回應碼。 |
-| 沒紀錄、過期、只查了今天的規則 | 無法據此重建當天。即使家中所有 DNS 都走 AdGuard Home，本機已快取的 DNS 回覆也未必產生新查詢。 |
+| 沒紀錄、過期、只查了今天的規則 | 無法據此重建當天。其他 DNS 伺服器（包括路由器提供的 IPv6 DNS）可能讓查詢不經 AdGuard Home；本機已快取的 DNS 回覆也未必產生新查詢。 |
+
+**DNS 紀錄有盲點。** MotherSphere 彙整的一台已出現 `k2f_chan registered` 的 PC，Pi-hole 沒有 `analytics.insightjs[.]com` 紀錄；玩家後來發現系統同時列有路由器的 IPv6 DNS。研究者提醒，Pi-hole、AdGuard Home 或 NextDNS 只看得到送到它們的查詢；若路由器再轉送，也可能記在路由器名下。核對當時的 DNS 路徑及用戶端歸屬，**不要用網域未命中來否定本機的執行證據**。目前設定只能輔助，不能還原整段歷史。[研究者對 DNS 盲點的說明](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6455933#gistcomment-6455933)
 
 訂閱多份惡意網域及釣魚清單確實可能擋下其中一段。已有人回報 11/1 使用 AdGuard Home 時，根網域成功解析到當時攻擊伺服器，啟動器有腳本快取卻未見木馬執行指標。要確認**是 DNS 保住哪一次啟動**，看那台機器當時的命中規則和回覆；要判斷**木馬有沒有跑過**，看主機跡證。[AdGuard Home 設定與記錄保留](https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration) · [玩家的 AdGuard Home 紀錄](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6455812#gistcomment-6455812)

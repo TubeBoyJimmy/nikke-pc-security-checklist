@@ -16,7 +16,7 @@
    • 接觸。檢查下列兩個目錄內的快取檔案，搜尋本案腳本網址特徵，例如 insightjs[.]com/l.js 或後備網域 insightjs[.]org/l.js。這裡把網域的點寫成 [.] 以避免誤觸，搜尋本機資料時比對實際的點。
      %APPDATA%\nikke_launcher\tbs_cache\Code Cache\js\
      %APPDATA%\nikke_launcher_hmt\tbs_cache\Code Cache\js\
-     若有既存 DNS／防毒紀錄可用，只取相關網域或本案檔案，核對時間與處置結果。DNS 查詢只能佐證有人嘗試解析，Blocked 僅說明該次查詢或檔案被攔截。
+     若有既存 DNS／防毒紀錄可用，只取相關網域或本案檔案，核對時間與處置結果。DNS 查詢只能佐證有人嘗試解析，Blocked 僅說明該次查詢或檔案被攔截。DNS 日誌只涵蓋送到該服務的查詢；另有 DNS 伺服器（包括路由器提供的 IPv6 DNS）、路由器轉送或本機快取時，可能缺漏或記在不同用戶端名下。不要因為 Pi-hole／AdGuard Home／NextDNS 沒有 analytics.insightjs[.]com 紀錄，就排除執行或降低已確認的本機跡證。
    • 下載。查 debug.log 與 Launcher\log\tinyget\ 下的既有下載紀錄，找 analytics[.]insightjs[.]com/comm/assets/insight.bundle 及可對應的成功完成下載紀錄，或已知惡意樣本的雜湊。僅出現網址、發起請求、HTTP 標頭或通用檔名，不足以判定檔案下載完成。若只能確定已送達，單獨標記「已下載，執行未確認」。
    • 執行。在啟動器自己的 debug.log 搜尋 k2f_chan registered。命中就記下時間，無須再看到 adopted、resuming 或 agent started as 才判定。若只有 startup already in progress、單獨的 UUID 或普通啟動訊息，不要判為命中。另查下列兩個目錄內，是否存在本案的 k2f.agent.state 狀態紀錄，只回報有無：
      %APPDATA%\nikke_launcher\tbs_cache\Local Storage\leveldb\
