@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-04 21:09（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-04 21:50（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -52,7 +52,8 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 | **11/4 15:14–15:20** | WormW 重新 GET 四個已知官方 JS，均取得乾淨內容；`FeedList` 原 URL 與加上查詢參數的請求均為 5,099 bytes。這是研究者抽查結果，**不是官方全節點清除確認** |
 | **11/4 19:20** | MotherSphere 複查四個 CDN 節點、兩個主機名的四個已知 JS，回報均為乾淨內容；這仍是有限範圍的研究者抽查 |
 | **11/4 19:57** | MotherSphere 發布 v0.4.1，修正壓縮 LevelDB／共用前綴造成的漏檢；舊的陰性結果建議重新檢查，詳見下方說明 |
-| **11/4 21:02** | MotherSphere 原始碼新增 CEF 登入資料夾檢查，並修正僅因啟動器執行中而判感染；截至 21:09 尚未收錄於正式版 |
+| **11/4 21:02** | MotherSphere 原始碼新增 CEF 登入資料夾檢查，並修正僅因啟動器執行中而判感染；當時尚未發布，後續已納入 v0.5.1 |
+| **11/4 21:39** | MotherSphere 正式發布 v0.5.1，包含上述修正，並新增 Google Play Games 版的 `nikke_launcher_google` 資料夾檢查 |
 
 **13:52 本表抽查已有改善，但仍先別開啟動器。** 當時的檢查只讀取這四個檔案並計算雜湊，沒有執行 JavaScript。`FeedList` 這次收到 5,099 bytes，SHA-256 為 `49b625b30b34dc1fa16edba30bdf63c18b6171a0fc4cf030e21ea4e1263ae18a`，與[已知乾淨版對照](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)相符。回應的 `Date` 是 03:12 UTC，並非本次取得時間，因此不能當作即時源站或全節點驗證。
 
@@ -68,22 +69,23 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 **11/4 19:57（台灣時間），MotherSphere 發布 [NIKKE-Launcher-Check v0.4.1](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.4.1)。** [這次修正](https://github.com/MotherSphere/NIKKE-Launcher-Check/commit/8a823d59e4d32358173197e64ea0b209650feb32)指出，啟動器 Local Storage 的 LevelDB 會把紀錄移到 `.ldb` 表，資料可能經 Snappy 壓縮，鍵名也可能共用前綴；直接搜尋原始文字可能漏掉 `k2f.agent.state`。新版會先解壓並還原完整鍵名再搜尋。
 
-**本表的一鍵 PowerShell 檢查尚未加入這項解析。** 若先前只用本表指令、純文字搜尋，或 MotherSphere 舊版工具，得到「沒找到已知痕跡」或只有接觸、未見木馬的結果，建議用 v0.4.1 重新檢查，尤其是 `debug.log` 已遺失或被覆寫時：
+**本表的一鍵 PowerShell 檢查尚未加入這項解析。** 若先前只用本表指令、純文字搜尋，或 MotherSphere 舊版工具，得到「沒找到已知痕跡」或只有接觸、未見木馬的結果，建議用已正式發布的 [v0.5.1](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.1) 重新檢查，尤其是 `debug.log` 已遺失或被覆寫時：
 
 1. 先保留現有日誌、快取與舊報告，**不要為了重查而開啟 NIKKE 啟動器，也不要先刪 `tbs_cache`**。
-2. 從上述研究者發布頁取得 Windows 版 `nikke-check-windows-x86_64.exe` 和 `SHA256SUMS.txt`，依[下載核對說明](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.4.1/docs/usage.md#check-the-download)比對 SHA-256。這是未簽章的第三方檢查工具，不是遊戲官方程式；雜湊相符只確認下載一致，不等於完整安全審核。
-3. 已隔離的電腦保持離線，由乾淨裝置下載後帶入。檢查工具可離線掃描，視窗上方應顯示 0.4.1。先選「Scan this computer」；未找到木馬跡證時依提示做「Full scan」。特殊安裝位置或未涵蓋的資料夾，再用「Scan a folder...」，並核對「Details」中的掃描位置與讀取失敗項目。[使用說明](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.4.1/docs/usage.md#the-window)
+2. 從 [v0.5.1 發布頁](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.1)取得 Windows 版 `nikke-check-windows-x86_64.exe` 和**同版本**的 `SHA256SUMS.txt`，依[下載核對說明](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.5.1/docs/usage.md#check-the-download)比對 SHA-256。這是未簽章的第三方檢查工具，不是遊戲官方程式；雜湊相符只確認下載一致，不等於完整安全審核。
+3. 已隔離的電腦保持離線，由乾淨裝置下載後帶入。檢查工具可離線掃描，視窗上方應顯示 0.5.1。新版支援繁體中文；下列按鈕以英文名稱對照。先選「Scan this computer」；未找到木馬跡證時依提示做「Full scan」。特殊安裝位置或未涵蓋的資料夾，再用「Scan a folder...」，並核對「Details」中的掃描位置與讀取失敗項目。[使用說明](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.5.1/docs/usage.md#the-window)
 
 **新版沒有找到痕跡，也不能保證沒感染或沒外洩。** 已刪除的紀錄不會因更新工具而恢復，掃描仍受位置、檔案可讀性等限制。先保存新報告，再依既有處置步驟處理。
 
-### 上游另有未發布的檢查修正
+### 上游已發布的檢查範圍更新
 
-**11/4 21:02（台灣時間），MotherSphere 的[原始碼提交](https://github.com/MotherSphere/NIKKE-Launcher-Check/commit/570d8a0cd42f00d2c11a507f2cb494c2d137cb4d)新增兩項變更；截至本表 21:09 查核，正式最新版仍是 v0.4.1，尚未包含：**
+**11/4 21:39（台灣時間），MotherSphere 正式發布 [v0.5.1](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.1)。** 先前 21:02 的[原始碼更新](https://github.com/MotherSphere/NIKKE-Launcher-Check/commit/570d8a0cd42f00d2c11a507f2cb494c2d137cb4d)已包含在這個正式版，**不必再等待發布**。[版本紀錄（固定版本）](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/0e09c7c422c48103856a933a3b910b51ba7b83da/CHANGELOG.md)列出：
 
-- **擴大檢查範圍：** 新增啟動器登入視窗使用的 `%LOCALAPPDATA%\CEF\User Data`，搜尋相同的木馬跡證，也解析壓縮的 LevelDB。其他 CEF 程式可能共用這個位置，**資料夾存在本身不代表感染，不要整個直接刪除**。v0.4.1 與本表腳本尚未加入這項專門檢查；先保留可能相關的資料，待含此功能的正式版發布後再補查。
+- **擴大檢查範圍：** 新增啟動器登入視窗使用的 `%LOCALAPPDATA%\CEF\User Data`，搜尋相同的木馬跡證，也解析壓縮的 LevelDB。其他 CEF 程式可能共用這個位置，**資料夾存在本身不代表感染，不要整個直接刪除**。v0.4.1 未包含此範圍，本表腳本也仍未加入這項專門檢查；先保留可能相關的資料，再用 v0.5.1 補查。
 - **修正上游工具誤報：** 不再只因 NIKKE 啟動器正在執行就列為感染，而是同次掃描另有木馬跡證時才把執行中的啟動器列為 critical。若舊工具的感染結果只有這個理由，先核對報告的「Details」；**這項修正不會推翻已找到的實際木馬跡證**，也不是重新開啟啟動器就安全的保證。
+- **補上 Google Play Games 版資料夾：** v0.5.1 新增 `%APPDATA%\nikke_launcher_google` 的檢查。使用這個版本的玩家，重查時請核對報告是否涵蓋該資料夾；這是掃描範圍補充，不是新增感染規模的證據。
 
-以上是尚待正式發布的上游變更，不需要自行下載執行未發布版本。本表既有腳本與感染判定未隨之修改；先前 v0.4.1 的 LevelDB 漏檢修正仍有效，但不表示它已涵蓋所有位置。
+以上是上游正式工具的更新，本表既有腳本與感染判定未隨之修改。v0.5.1 也包含先前的 LevelDB 漏檢修正；仍須先保存證據，不能把一次沒有找到痕跡當作全面安全的證明。
 
 ## 結果怎麼判讀
 
