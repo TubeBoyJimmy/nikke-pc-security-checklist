@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-04 16:31（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-04 20:24（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -9,6 +9,8 @@
 1. **官方確認修好之前，不要開 PC 版啟動器。**
 2. **用手機改 NIKKE（Level Infinite）帳號密碼，並登出所有裝置。** 同一組密碼也用在別處的，一起換掉。
 3. **跑一次[一鍵檢查](WINDOWS-CHECKS.md#一鍵檢查)**，照結果決定下一步。
+
+**11/4 檢查限制更新：先前沒找到痕跡的人，請看[重新檢查建議](#舊的陰性結果建議重查)。** 舊版工具與本表原始文字搜尋可能漏掉壓縮的 LevelDB 紀錄。
 
 > 為什麼沒中也要改密碼？木馬只在「部分啟動」時才送來，而且會刪掉自己的暫存檔，檢查不出來不代表 100% 沒事，而改密碼的成本很低。研究者 MotherSphere 建議 10/23 之後開過啟動器就改；巴哈整理文更保守，從 9/27 算起。這份表採用 9/27。
 
@@ -48,6 +50,8 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 | 11/4 11:13 | 國際版官方在 X 發布公告 |
 | **11/4 13:52** | 本表補充抽查：本次網路路徑取得 `FeedList.feb647c9.js`、`aegis-fix.min.js`、`vue-bucket.min.js`、`images.7fec4c32.js` 的內容，SHA-256 均符合研究者公布的乾淨版本。**不代表全球 CDN 節點都已清除** |
 | **11/4 15:14–15:20** | WormW 重新 GET 四個已知官方 JS，均取得乾淨內容；`FeedList` 原 URL 與加上查詢參數的請求均為 5,099 bytes。這是研究者抽查結果，**不是官方全節點清除確認** |
+| **11/4 19:20** | MotherSphere 複查四個 CDN 節點、兩個主機名的四個已知 JS，回報均為乾淨內容；這仍是有限範圍的研究者抽查 |
+| **11/4 19:57** | MotherSphere 發布 v0.4.1，修正壓縮 LevelDB／共用前綴造成的漏檢；舊的陰性結果建議重新檢查，詳見下方說明 |
 
 **13:52 本表抽查已有改善，但仍先別開啟動器。** 當時的檢查只讀取這四個檔案並計算雜湊，沒有執行 JavaScript。`FeedList` 這次收到 5,099 bytes，SHA-256 為 `49b625b30b34dc1fa16edba30bdf63c18b6171a0fc4cf030e21ea4e1263ae18a`，與[已知乾淨版對照](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)相符。回應的 `Date` 是 03:12 UTC，並非本次取得時間，因此不能當作即時源站或全節點驗證。
 
@@ -56,6 +60,20 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 **15:14–15:20 的複查仍有範圍限制。** [WormW 最新複查（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/docs/attack-path.md#211-官方资产当前状态2026-11-04-复核)確認上述四個物件在本次請求中已沒有已知注入特徵，但外部回應不能完全區分源站與中間快取，也不能排除其他 CDN 邊緣節點或玩家本機仍有舊檔。攻擊者如何取得寫入權限、是否還有其他受污染檔案，都尚未釐清。**這不是全面安全或感染電腦已清理的證明。**
 
 **11/4 13:53 研究補充（發布時間）：單機疑似早期中斷。** WormW 根據一台電腦的兩次日誌截圖，記錄到 `k2f_chan registered` 後出現 `invalid UTF-8` 錯誤；截圖範圍內未見 `adopted` 或 `agent started as`，因此完整遠控會話是否建立仍未證實。原始完整日誌未提供，截圖未公開入庫，研究者也未直接檢查該主機。「中文使用者路徑導致中斷」只是未證實的假說。**這個案例仍已開始執行木馬，不能當作安全或沒有外洩的證明，也不要為了驗證而重開啟動器。** [WormW 單機觀察（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/1b7a2ca164654fd1a10464e95df56c082cb026dd/docs/field-observations.md)
+
+**19:20 的複查範圍擴及四個 CDN 節點。** [MotherSphere 晚間更新（固定版本）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5/4d9b02aa437755f376edb96403042c94898bda0a)回報，四個已知 JS 在四個 CDN IP、兩個主機名上均為乾淨內容，也檢查了 gzip 與帶查詢參數的回應。研究者因此建議：重新開啟前，先檢查或保全日誌、快取，再清除 `tbs_cache`，並持續封鎖已知攻擊網域與 IP。**這不是官方全節點安全確認**；未抽查節點、入侵根因仍有疑問，本機舊快取及既有感染也不會自動清除。封鎖目前的網域與 IP，亦不能防止攻擊者改用新位置。
+
+### 舊的陰性結果建議重查
+
+**11/4 19:57（台灣時間），MotherSphere 發布 [NIKKE-Launcher-Check v0.4.1](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.4.1)。** [這次修正](https://github.com/MotherSphere/NIKKE-Launcher-Check/commit/8a823d59e4d32358173197e64ea0b209650feb32)指出，啟動器 Local Storage 的 LevelDB 會把紀錄移到 `.ldb` 表，資料可能經 Snappy 壓縮，鍵名也可能共用前綴；直接搜尋原始文字可能漏掉 `k2f.agent.state`。新版會先解壓並還原完整鍵名再搜尋。
+
+**本表的一鍵 PowerShell 檢查尚未加入這項解析。** 若先前只用本表指令、純文字搜尋，或 MotherSphere 舊版工具，得到「沒找到已知痕跡」或只有接觸、未見木馬的結果，建議用 v0.4.1 重新檢查，尤其是 `debug.log` 已遺失或被覆寫時：
+
+1. 先保留現有日誌、快取與舊報告，**不要為了重查而開啟 NIKKE 啟動器，也不要先刪 `tbs_cache`**。
+2. 從上述研究者發布頁取得 Windows 版 `nikke-check-windows-x86_64.exe` 和 `SHA256SUMS.txt`，依[下載核對說明](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.4.1/docs/usage.md#check-the-download)比對 SHA-256。這是未簽章的第三方檢查工具，不是遊戲官方程式；雜湊相符只確認下載一致，不等於完整安全審核。
+3. 已隔離的電腦保持離線，由乾淨裝置下載後帶入。檢查工具可離線掃描，視窗上方應顯示 0.4.1。先選「Scan this computer」；未找到木馬跡證時依提示做「Full scan」。特殊安裝位置或未涵蓋的資料夾，再用「Scan a folder...」，並核對「Details」中的掃描位置與讀取失敗項目。[使用說明](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.4.1/docs/usage.md#the-window)
+
+**新版沒有找到痕跡，也不能保證沒感染或沒外洩。** 已刪除的紀錄不會因更新工具而恢復，掃描仍受位置、檔案可讀性等限制。先保存新報告，再依既有處置步驟處理。
 
 ## 結果怎麼判讀
 
