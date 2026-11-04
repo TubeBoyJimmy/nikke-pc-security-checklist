@@ -84,7 +84,9 @@ function Add-Launcher([string]$root) {
     }
 }
 foreach ($r in $roots) { Add-Launcher $r }
-$dataDirs = @(Get-ChildItem -LiteralPath $env:APPDATA -Directory -Force -Filter 'nikke_launcher*')
+$err = $null
+$dataDirs = @(Get-ChildItem -LiteralPath $env:APPDATA -Directory -Force -Filter 'nikke_launcher*' -ErrorVariable err)
+foreach ($e in @($err)) { if ($e) { $skip.Add("資料夾無法讀取：$(Show-Path "$($e.TargetObject)")") } }
 if ($launchers.Count) {
     Write-Host '自動找到這些 NIKKE 安裝：'
     $launchers | ForEach-Object { Write-Host "  $(Show-Path $_)" }
@@ -169,16 +171,18 @@ foreach ($b in @($env:LOCALAPPDATA, $env:ProgramW6432, $env:ProgramFiles, ${env:
 }
 foreach ($f in @(Get-Tree $env:TEMP 0 'k2f*')) { $red.Add("暫存資料夾有木馬檔案：$(Show-Path $f.FullName)") }
 foreach ($view in 'Registry64', 'Registry32') {
-    $base = [Microsoft.Win32.RegistryKey]::OpenBaseKey('CurrentUser', $view)
-    $key = $base.OpenSubKey($clsid)
-    if ($key) {
-        $v = $null
-        $ip = $key.OpenSubKey('InprocServer32')
-        if ($ip) { $v = $ip.GetValue(''); $ip.Close() }
-        $key.Close()
-        if ($v) { $red.Add("登錄檔常駐：HKCU\$clsid 指向 $(Show-Path "$v")") } else { $red.Add("登錄檔殘留：HKCU\$clsid 存在但沒有內容，代表曾被裝過") }
-    }
-    $base.Close()
+    try {
+        $base = [Microsoft.Win32.RegistryKey]::OpenBaseKey('CurrentUser', $view)
+        $key = $base.OpenSubKey($clsid)
+        if ($key) {
+            $v = $null
+            $ip = $key.OpenSubKey('InprocServer32')
+            if ($ip) { $v = $ip.GetValue(''); $ip.Close() }
+            $key.Close()
+            if ($v) { $red.Add("登錄檔常駐：HKCU\$clsid 指向 $(Show-Path "$v")") } else { $red.Add("登錄檔殘留：HKCU\$clsid 存在但沒有內容，代表曾被裝過") }
+        }
+        $base.Close()
+    } catch { $skip.Add("登錄檔無法讀取：HKCU\$clsid（$view）") }
 }
 
 # 5. 結果
@@ -212,7 +216,7 @@ Write-Host '提醒：找不到不等於 100% 安全。官方確認修好之前�
 - `[i]` 灰字：補充資訊。**請看「debug.log 涵蓋期間」**，確認有包含你玩的日期。時間格式是「月日/時分秒」，例如 `1101/012037` 是 11/1 01:20:37。
 - 最後一行是結論，對照 [README 的判讀表](README.md#結果怎麼判讀)。
 
-**出現 `[!!]` 時，怎麼核對下載有沒有成功：** 保持離線，用記事本打開它列出的檔案，按 Ctrl+F 搜尋 `insight.bundle`。那一行附近如果有 `http_code=0`、`size=0`，代表那次下載失敗；如果有 `-3214f` 結尾的 ETag 或 `Content-Length: 205135`，代表伺服器送出了木馬本體。不管哪一種，帳號都照中毒處理，因為其他次啟動可能成功了。
+**出現 `[!!]` 時，怎麼核對下載有沒有成功：** 保持離線，用記事本打開它列出的檔案，按 Ctrl+F 搜尋 `insight.bundle`。那一行附近如果有 `http_code=0`、`size=0`，代表那次下載失敗；如果有 `-3214f` 結尾的 ETag 或 `Content-Length: 205135`，代表回應符合木馬本體的特徵；有沒有完整收到，要看同一筆紀錄的實際接收大小、完成狀態，或 `Launcher\log\tinyget\` 裡有沒有留下對應的檔案。不管哪一種，帳號都照中毒處理，因為其他次啟動可能成功了。
 
 如果跑出一堆紅色錯誤訊息（不是 `[X]` 開頭的），通常是複製時少了符號，請從頭重新複製一次。
 
@@ -233,6 +237,7 @@ Write-Host '提醒：找不到不等於 100% 安全。官方確認修好之前�
 - 找 NIKKE 的方式：Windows 的解除安裝清單，加上每顆硬碟前三層名稱含 `NIKKE` 的資料夾。資料夾名稱沒有 `NIKKE`（例如只有中文名稱）或裝得比較深，就可能找不到，所以一定要核對清單，缺的自己貼上。
 - 快取檔是二進位格式，指令會同時用 ASCII 和 UTF-16 兩種編碼搜尋。
 - 單一檔案超過 64 MB、被其他程式鎖住，或資料夾沒有讀取權限，都會略過，並在 `[?]` 列出來。
+- `[?]` 只涵蓋腳本有列舉到的檔案和資料夾。整個資料夾打不開、或登錄檔讀不到，也會列出；但如果某個路徑因為權限看起來像不存在，腳本無法分辨。請用當時玩遊戲的那個 Windows 帳號執行，這類問題幾乎不會發生。
 
 ## 不想跑指令：手動看這幾個地方
 
