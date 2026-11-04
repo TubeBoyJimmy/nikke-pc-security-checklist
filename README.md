@@ -59,18 +59,26 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 | 結果 | 代表什麼 | 怎麼做 |
 |---|---|---|
 | **中毒** | 木馬在這台電腦跑過 | 照下面的[中毒了怎麼辦](#中毒了怎麼辦)處理 |
+| **高風險** | 啟動器連到木馬伺服器或下載過木馬，但沒找到執行紀錄 | 先隔離電腦，**帳號照中毒處理**（第 1–3 步）。電腦補查後找到執行痕跡，就照中毒處理；都沒有的話不一定要重灌，但重灌仍是最保險的做法 |
 | **有接觸** | 啟動器載入過攻擊腳本，但沒找到木馬執行的痕跡 | **帳號照中毒處理**（第 2、3 步）。電腦本身沒有中毒證據，不用急著重灌 |
 | **資料不足** | 找不到 `debug.log`、重裝過，或紀錄沒涵蓋你玩的日期 | 無法判斷，帳號照「有接觸」處理 |
 | **沒找到已知痕跡** | 已知的痕跡都沒出現 | 做完[先做這三件事](#先做這三件事)，等官方公告 |
 
-**以下任何一項出現，就算中毒：**
+**以下任何一項出現，就算中毒（證明木馬跑過）：**
 
-- `debug.log` 裡有 `k2f_chan`、`lua downloaded to` 或 `agent started as`
-- 安裝資料夾的 `Launcher\log\` 裡出現 `insight.bundle`、`analytics.insightjs.com`，或有 `k2f.lua`、LuaJIT 格式的檔案
-- 啟動器資料 `%APPDATA%\nikke_launcher*` 裡出現 `k2f_chan` 或 `k2f.agent`（例如 `k2f.agent.state`），或連線紀錄裡有 `analytics.insightjs.com`
+- `debug.log` 裡有 `k2f_chan` 或 `agent started as`
+- 啟動器資料 `%APPDATA%\nikke_launcher*` 裡出現 `k2f_chan` 或 `k2f.agent`（例如 `k2f.agent.state`）
 - 登錄檔有 `HKCU\Software\Classes\CLSID\{E77CC89B-7401-4C04-8CED-149DB35ADD04}`。**就算是空的也算**，因為木馬自己的清除指令只會清空、不會刪掉
 - 瀏覽器資料夾的 `PlatformExperienceHelper` 底下有 64 碼英數字的子資料夾（**裡面沒有 DLL 也算**），或有 `platform_experience_helper.dll`
 - `%TEMP%` 裡有 `k2f` 開頭的檔案
+
+**以下這些算「高風險」（證明啟動器連到木馬伺服器或下載過木馬，但不能單獨證明木馬跑過）：**
+
+- `debug.log` 或安裝資料夾的 `Launcher\log\` 裡出現 `insight.bundle`、`analytics.insightjs.com` 或 `lua downloaded to`
+- `Launcher\log\` 裡有 `k2f.lua`、LuaJIT 格式的檔案，或下載回應的 ETag 是 `-3214f` 結尾
+- 啟動器的連線紀錄（`TransportSecurity`、`Network Persistent State`）裡有 `analytics.insightjs.com`
+
+下載紀錄如果顯示 `http_code=0`、0 bytes，代表那次下載沒成功。但木馬不是每次啟動都會送來，其他次可能成功了，所以帳號一樣照中毒處理。研究者 MotherSphere 也把「啟動器連到木馬伺服器」算成中毒。
 
 **只有下面這些，算「有接觸」：** 啟動器快取裡有 `insightjs`、DNS 紀錄查過 `insightjs[.]com`。
 

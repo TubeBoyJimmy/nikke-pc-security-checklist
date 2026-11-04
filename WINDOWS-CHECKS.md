@@ -8,13 +8,15 @@
 
 1. 在開始按鈕上按右鍵，選「終端機」或「Windows PowerShell」。
 2. 複製下面整段，在視窗裡按右鍵貼上，再按 Enter。跳出「多行貼上」的警告就選仍要貼上；貼上後畫面停頓幾秒是正常的。
-3. 等幾秒到一兩分鐘。如果沒自動找到 NIKKE，它會請你貼上安裝資料夾的路徑。
+3. 它會先列出自動找到的 NIKKE 安裝，再問你還有沒有其他安裝位置。台港澳版和國際版分開裝、清單裡只出現一包的話，請把另一包的安裝資料夾路徑貼上按 Enter（可以貼很多次）。都齊了就直接按 Enter。
+4. 等幾秒到一兩分鐘，看結果。
 
 ```powershell
 & {
 $ErrorActionPreference = 'SilentlyContinue'
 $clsid = 'Software\Classes\CLSID\{E77CC89B-7401-4C04-8CED-149DB35ADD04}'
 $red = New-Object 'System.Collections.Generic.List[string]'
+$dl = New-Object 'System.Collections.Generic.List[string]'
 $yel = New-Object 'System.Collections.Generic.List[string]'
 $note = New-Object 'System.Collections.Generic.List[string]'
 $latin1 = [Text.Encoding]::GetEncoding(28591)
@@ -74,10 +76,21 @@ function Add-Launcher([string]$root) {
 }
 foreach ($r in $roots) { Add-Launcher $r }
 $dataDirs = @(Get-ChildItem -LiteralPath $env:APPDATA -Directory -Force -Filter 'nikke_launcher*')
-if ($launchers.Count -eq 0) {
+if ($launchers.Count) {
+    Write-Host '自動找到這些 NIKKE 安裝：'
+    $launchers | ForEach-Object { Write-Host "  $(Show-Path $_)" }
+    $ask = '還有其他安裝位置嗎（例如台港澳版和國際版分開裝）？有就貼上安裝資料夾路徑按 Enter，可以貼很多次；沒有就直接按 Enter'
+} else {
+    $ask = '沒自動找到 NIKKE 安裝位置。有安裝的話，貼上安裝資料夾路徑按 Enter，可以貼很多次；沒有就直接按 Enter'
+}
+for ($i = 0; $i -lt 10; $i++) {
     $manual = ''
-    try { $manual = Read-Host '沒自動找到 NIKKE 安裝位置。有安裝的話，請貼上安裝資料夾路徑後按 Enter（沒有就直接按 Enter）' } catch {}
-    Add-Launcher "$manual".Trim().Trim('"')
+    try { $manual = Read-Host $ask } catch {}
+    $manual = "$manual".Trim().Trim('"')
+    if (-not $manual) { break }
+    $before = $launchers.Count
+    Add-Launcher $manual
+    if ($launchers.Count -gt $before) { Write-Host '  已加入。' } else { Write-Host "  這個路徑找不到 NIKKE 的 Launcher 資料夾，或已經在清單裡：$manual" -ForegroundColor Yellow }
 }
 
 # 2. 啟動器日誌、下載紀錄
@@ -97,19 +110,22 @@ foreach ($L in $launchers) {
                     if ($m) { if (-not $hits.Contains($m)) { $hits[$m] = $stamp } } elseif ($line.Contains('insightjs')) { $weak++ }
                 }
             } finally { $sr.Dispose() }
-            foreach ($m in $hits.Keys) { $red.Add("debug.log 出現「$m」（第一次：$($hits[$m])）：$(Show-Path $dbg)") }
+            foreach ($m in $hits.Keys) {
+                $msg = "debug.log 出現「$m」（第一次：$($hits[$m])）：$(Show-Path $dbg)"
+                if ($m -eq 'k2f_chan' -or $m -eq 'agent started as') { $red.Add($msg) } else { $dl.Add($msg) }
+            }
             if ($weak) { $yel.Add("debug.log 有 $weak 行提到 insightjs：$(Show-Path $dbg)") }
             if ($first) { $note.Add("debug.log 涵蓋期間 $first ~ $last（月日/時分秒，沒有年份）：$(Show-Path $dbg)") } else { $note.Add("debug.log 沒有可辨識的時間戳：$(Show-Path $dbg)") }
         } catch { $missingLog = $true; $note.Add("debug.log 無法讀取：$(Show-Path $dbg)") }
     } else { $missingLog = $true; $note.Add("找不到 debug.log：$(Show-Path $dbg)") }
     foreach ($f in @(Get-ChildItem -LiteralPath (Join-Path $L 'log') -File -Recurse -Depth 8 -Force)) {
-        if ($f.Name -eq 'k2f.lua') { $red.Add("下載資料夾有木馬檔 k2f.lua：$(Show-Path $f.FullName)"); continue }
+        if ($f.Name -eq 'k2f.lua') { $dl.Add("下載資料夾有木馬檔 k2f.lua：$(Show-Path $f.FullName)"); continue }
         $t = Get-Text $f
         if ($null -eq $t) { $note.Add("檔案太大或無法讀取，未檢查：$(Show-Path $f.FullName)"); continue }
-        if ($t.Length -ge 3 -and [int]$t[0] -eq 0x1B -and [int]$t[1] -eq 0x4C -and [int]$t[2] -eq 0x4A) { $red.Add("下載資料夾有 LuaJIT 木馬本體：$(Show-Path $f.FullName)"); continue }
+        if ($t.Length -ge 3 -and [int]$t[0] -eq 0x1B -and [int]$t[1] -eq 0x4C -and [int]$t[2] -eq 0x4A) { $dl.Add("下載資料夾有 LuaJIT 木馬本體：$(Show-Path $f.FullName)"); continue }
         $m = Find-Mark $t @('insight.bundle', 'analytics.insightjs.com')
         if (-not $m -and $f.Name -like 'tinyget*' -and $t.Contains('-3214f"')) { $m = 'ETag -3214f（木馬本體的下載回應）' }
-        if ($m) { $red.Add("下載紀錄出現「$m」：$(Show-Path $f.FullName)") } elseif (Find-Mark $t @('insightjs')) { $yel.Add("下載紀錄提到 insightjs：$(Show-Path $f.FullName)") }
+        if ($m) { $dl.Add("下載紀錄出現「$m」：$(Show-Path $f.FullName)") } elseif (Find-Mark $t @('insightjs')) { $yel.Add("下載紀錄提到 insightjs：$(Show-Path $f.FullName)") }
     }
 }
 
@@ -121,8 +137,8 @@ foreach ($d in $dataDirs) {
         $p = Show-Path $f.FullName
         $m = Find-Mark $t @('k2f_chan', 'k2f.agent')
         if ($m) { $red.Add("啟動器資料有木馬紀錄「$m」：$p"); continue }
-        if ($f.Name -eq 'TransportSecurity' -and $t.Contains('wxL1BeG57AG6frvPqS7txqpE3NyN0/fSUZHCbEn9NSw=')) { $red.Add("連線紀錄有木馬伺服器 analytics.insightjs.com：$p"); continue }
-        if ($f.Name -eq 'Network Persistent State' -and $t.Contains('analytics.insightjs.com')) { $red.Add("連線紀錄有木馬伺服器 analytics.insightjs.com：$p"); continue }
+        if ($f.Name -eq 'TransportSecurity' -and $t.Contains('wxL1BeG57AG6frvPqS7txqpE3NyN0/fSUZHCbEn9NSw=')) { $dl.Add("連線紀錄有木馬伺服器 analytics.insightjs.com：$p"); continue }
+        if ($f.Name -eq 'Network Persistent State' -and $t.Contains('analytics.insightjs.com')) { $dl.Add("連線紀錄有木馬伺服器 analytics.insightjs.com：$p"); continue }
         if ($f.Name -eq 'TransportSecurity' -and $t.Contains('JeFWywdZy+3jPC93e3P7ACdJ8liQHB7rH+9VHn7kswg=')) { $yel.Add("連線紀錄有 insightjs.com：$p"); continue }
         if (Find-Mark $t @('insightjs')) { $yel.Add("啟動器快取載入過 insightjs 腳本：$(Show-Path $f.DirectoryName)") }
     }
@@ -161,9 +177,11 @@ Write-Host ''
 if ($launchers.Count) { $launchers | ForEach-Object { Write-Host "已檢查：$(Show-Path $_)" } }
 $note | Select-Object -Unique | ForEach-Object { Write-Host "  [i] $_" -ForegroundColor Gray }
 $red | Select-Object -Unique | ForEach-Object { Write-Host "  [X] $_" -ForegroundColor Red }
+$dl | Select-Object -Unique | ForEach-Object { Write-Host "  [!!] $_" -ForegroundColor Magenta }
 $yel | Select-Object -Unique | ForEach-Object { Write-Host "  [!] $_" -ForegroundColor Yellow }
 Write-Host ''
 if ($red.Count) { Write-Host '【結果：中毒】木馬在這台電腦跑過。先斷網，用手機改密碼並登出所有裝置，再照 README「中毒了怎麼辦」處理。' -ForegroundColor Red }
+elseif ($dl.Count) { Write-Host '【結果：高風險】啟動器連到木馬伺服器或下載過木馬，但沒找到執行紀錄。先斷網，帳號照中毒處理，再照 README 的判讀表補查。' -ForegroundColor Magenta }
 elseif ($yel.Count) { Write-Host '【結果：有接觸】啟動器載入過攻擊腳本，但沒找到木馬執行的痕跡。帳號請照中毒處理：用手機改密碼並登出所有裝置。' -ForegroundColor Yellow }
 elseif ($launchers.Count -eq 0 -and $dataDirs.Count -eq 0) { Write-Host '【結果：找不到 NIKKE】這個 Windows 帳號下沒有 NIKKE PC 版的安裝或資料。裝在特別位置的話，重跑一次並貼上路徑。' -ForegroundColor Cyan }
 elseif ($missingLog -or $launchers.Count -eq 0) { Write-Host '【結果：資料不足】缺少 debug.log 或安裝位置，無法判斷。帳號請照「有接觸」處理。' -ForegroundColor Cyan }
@@ -174,7 +192,8 @@ Write-Host '提醒：找不到不等於 100% 安全。官方確認修好之前�
 
 ### 結果怎麼看
 
-- `[X]` 紅字：中毒的痕跡。
+- `[X]` 紅字：中毒的痕跡，證明木馬跑過。
+- `[!!]` 紫字：高風險的痕跡，證明啟動器連到木馬伺服器或下載過木馬，但不能單獨證明木馬跑過。
 - `[!]` 黃字：有接觸的痕跡。
 - `[i]` 灰字：補充資訊。**請看「debug.log 涵蓋期間」**，確認有包含你玩的日期。時間格式是「月日/時分秒」，例如 `1101/012037` 是 11/1 01:20:37。
 - 最後一行是結論，對照 [README 的判讀表](README.md#結果怎麼判讀)。
@@ -195,7 +214,7 @@ Write-Host '提醒：找不到不等於 100% 安全。官方確認修好之前�
 | `%TEMP%` | `k2f` 開頭的檔案 |
 | 登錄檔 `HKCU\Software\Classes\CLSID\{E77CC89B-7401-4C04-8CED-149DB35ADD04}`（64 位元與 32 位元） | 這個機碼存不存在、指向哪裡 |
 
-- 找 NIKKE 的方式：Windows 的解除安裝清單，加上每顆硬碟前三層名稱含 `NIKKE` 的資料夾。
+- 找 NIKKE 的方式：Windows 的解除安裝清單，加上每顆硬碟前三層名稱含 `NIKKE` 的資料夾。資料夾名稱沒有 `NIKKE`（例如只有中文名稱）或裝得比較深，就可能找不到，所以一定要核對清單，缺的自己貼上。
 - 快取檔是二進位格式，指令會同時用 ASCII 和 UTF-16 兩種編碼搜尋。
 - 單一檔案超過 64 MB 會略過，並在 `[i]` 列出來。
 

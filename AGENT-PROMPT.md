@@ -29,14 +29,15 @@
 1. 先問我大概哪些日期開過啟動器。再找出 NIKKE 的安裝位置（解除安裝清單、捷徑，或問我）。國際版和台港澳版分開裝的話，兩份都要查。
 2. 讀 <安裝資料夾>\Launcher\intl_service\debug.log：
    - 回報最早和最晚的時間戳（格式是 [MMDD/HHMMSS.mmm:...]，沒有年份），確認有涵蓋我玩的日期。
-   - 搜尋 k2f_chan、lua downloaded to、agent started as、insight.bundle、analytics.insightjs.com。任何一個命中 = 中毒。
+   - k2f_chan、agent started as = 中毒（證明木馬跑過）。
+   - lua downloaded to、insight.bundle、analytics.insightjs.com = 高風險（連到木馬伺服器或下載過木馬，不能單獨證明木馬跑過）。回報該行有沒有 http_code=0 或 0 bytes 這類下載失敗的字樣。
    - 只出現 insightjs = 有接觸。
 3. 搜尋 <安裝資料夾>\Launcher\log\ 底下所有檔案（包含 tinyget.mem.log）：
-   - 出現 insight.bundle、analytics.insightjs.com，或 ETag 以 -3214f" 結尾 = 中毒。
-   - 有 k2f.lua，或檔案開頭是位元組 1B 4C 4A（LuaJIT）= 中毒。不要執行這些檔案。
+   - 出現 insight.bundle、analytics.insightjs.com，或 ETag 以 -3214f" 結尾 = 高風險。一樣回報下載是否失敗。
+   - 有 k2f.lua，或檔案開頭是位元組 1B 4C 4A（LuaJIT）= 高風險。不要執行這些檔案。
 4. 搜尋 %APPDATA%\nikke_launcher 和 %APPDATA%\nikke_launcher_hmt 底下所有檔案。這些多是二進位檔，請用位元組比對，同時搜尋 ASCII 和 UTF-16LE 兩種編碼。不要因為一般文字搜尋沒結果，就判定沒有。
    - 出現 k2f_chan 或 k2f.agent = 中毒。
-   - 名為 TransportSecurity 的檔案含 wxL1BeG57AG6frvPqS7txqpE3NyN0/fSUZHCbEn9NSw=，或名為 Network Persistent State 的檔案含 analytics.insightjs.com = 中毒。
+   - 名為 TransportSecurity 的檔案含 wxL1BeG57AG6frvPqS7txqpE3NyN0/fSUZHCbEn9NSw=，或名為 Network Persistent State 的檔案含 analytics.insightjs.com = 高風險。
    - 其他檔案含 insightjs = 有接觸。
 5. 檢查瀏覽器常駐（沒裝 Chrome 也要查）：
    - 下列資料夾底下的 PlatformExperienceHelper：%LOCALAPPDATA%\Google\Chrome\User Data、%LOCALAPPDATA%\Microsoft\Edge\User Data、%LOCALAPPDATA%\BraveSoftware\Brave-Browser\User Data、%LOCALAPPDATA%\Vivaldi\User Data、%LOCALAPPDATA%\Chromium\User Data、%APPDATA%\Opera Software\Opera Stable、%APPDATA%\Opera Software\Opera GX Stable。有 64 碼十六進位名稱的子資料夾（就算是空的），或有 platform_experience_helper.dll = 中毒。platform_experience_helper.exe 和 LoadFeatures 是正常檔案。
@@ -45,7 +46,7 @@
 7. 讀登錄檔 HKCU\Software\Classes\CLSID\{E77CC89B-7401-4C04-8CED-149DB35ADD04}，64 位元和 32 位元檢視都要查（reg query 分別加 /reg:64、/reg:32）。機碼存在 = 中毒，就算預設值是空的也算。回報 InprocServer32 的預設值指向哪裡。HKLM 底下同一個 CLSID 指向 wpc.dll 是 Windows 的正常項目，不算。
 
 報告格式：
-- 第一行給結論：中毒／有接觸／資料不足（找不到 debug.log、重裝過，或紀錄沒涵蓋我玩的日期）／沒找到已知痕跡。
+- 第一行給結論，取最嚴重的一級：中毒／高風險／有接觸／資料不足（找不到 debug.log、重裝過，或紀錄沒涵蓋我玩的日期）／沒找到已知痕跡。
 - 接著用表格列出：檢查項目｜查了哪裡｜結果與時間。
 - 列出沒查到或查不了的項目。
 - 做到報告為止，不要開始處理。
@@ -65,6 +66,7 @@
 處理順序：
 1. 判斷範圍：
    - 中毒：提醒我拔網路線或關 Wi-Fi，並改用手機處理帳號（第 4 步）。
+   - 高風險：一樣先提醒我斷網，帳號照中毒處理（第 4 步）。電腦先補查執行痕跡；找到就照中毒處理，沒找到的話把重灌列為最保險的選項，由我決定。
    - 有接觸／資料不足：電腦先不用清理，但帳號照中毒處理（第 4 步）。
    - 沒找到已知痕跡：提醒我用手機改 NIKKE 密碼並登出所有裝置，然後跳到第 5 步。
 2. 動手前，建議我把檢查結果截圖，或存到本機（不要存到雲端同步資料夾）。
