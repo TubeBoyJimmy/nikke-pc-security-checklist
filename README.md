@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-04 21:50（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-05 01:47（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -54,6 +54,7 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 | **11/4 19:57** | MotherSphere 發布 v0.4.1，修正壓縮 LevelDB／共用前綴造成的漏檢；舊的陰性結果建議重新檢查，詳見下方說明 |
 | **11/4 21:02** | MotherSphere 原始碼新增 CEF 登入資料夾檢查，並修正僅因啟動器執行中而判感染；當時尚未發布，後續已納入 v0.5.1 |
 | **11/4 21:39** | MotherSphere 正式發布 v0.5.1，包含上述修正，並新增 Google Play Games 版的 `nikke_launcher_google` 資料夾檢查 |
+| **11/5 01:13–01:34** | 玩家新增 gzip 快取漏檢及 Temp 名稱疑似誤報回報；個案尚待核實，詳見下方檢查限制 |
 
 **13:52 本表抽查已有改善，但仍先別開啟動器。** 當時的檢查只讀取這四個檔案並計算雜湊，沒有執行 JavaScript。`FeedList` 這次收到 5,099 bytes，SHA-256 為 `49b625b30b34dc1fa16edba30bdf63c18b6171a0fc4cf030e21ea4e1263ae18a`，與[已知乾淨版對照](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)相符。回應的 `Date` 是 03:12 UTC，並非本次取得時間，因此不能當作即時源站或全節點驗證。
 
@@ -86,6 +87,13 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 - **補上 Google Play Games 版資料夾：** v0.5.1 新增 `%APPDATA%\nikke_launcher_google` 的檢查。使用這個版本的玩家，重查時請核對報告是否涵蓋該資料夾；這是掃描範圍補充，不是新增感染規模的證據。
 
 以上是上游正式工具的更新，本表既有腳本與感染判定未隨之修改。v0.5.1 也包含先前的 LevelDB 漏檢修正；仍須先保存證據，不能把一次沒有找到痕跡當作全面安全的證明。
+
+### 11/5 新增的待核實檢查限制
+
+- **單獨 Temp 名稱命中，先核對具體證據。** [上游 Issue #19](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/19)有兩位玩家回報，早於事件的 `k2f` 開頭目錄被標為感染；首位使用的是 v0.4.0。**作者尚未裁定，個案是否誤報仍未確認。** 靜態核對 [v0.5.1 程式碼](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/0e09c7c422c48103856a933a3b910b51ba7b83da/src/scan.rs#L856-L889)，這項檢查只按名稱前綴收錄 Temp 條目，未排除目錄；本表腳本也可能命中目錄。若報告只有這一項，請先保留資料，核對檔案／目錄類型、建立與修改時間、內容及其他跡證。日期較早或目錄為空，都不能單獨證明整台電腦安全。
+- **LevelDB 修正不代表所有 HTTP 快取都已解壓檢查。** 一位[玩家回報](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5#gistcomment-6457040)，純文字搜尋未命中，解壓 HTTP Cache 的 gzip 內容後才找到污染的 `FeedList` 與 `images`；這是**尚未獨立核驗原始快取的單機觀察**。靜態核對 [v0.5.1 快取掃描](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/0e09c7c422c48103856a933a3b910b51ba7b83da/src/scan.rs#L632-L686)，該段只對 `.ldb` 做解析，其餘仍搜尋原始位元組。因此不能把「純文字沒命中」或「已支援 LevelDB 解壓」當作 HTTP 快取已完整排除的證明。
+
+先保存快取與報告，不要為了驗證而重新開啟啟動器。**以上限制不會推翻實際日誌中的 `k2f_chan registered`、已確認的惡意 DLL 等具體跡證。** 本次只補充待核實資訊，既有腳本與判定未修改。
 
 ## 結果怎麼判讀
 
