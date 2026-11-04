@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-05 04:34（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-05 05:54（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -72,6 +72,10 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 **11/4 19:57（台灣時間），MotherSphere 發布 [NIKKE-Launcher-Check v0.4.1](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.4.1)。** [這次修正](https://github.com/MotherSphere/NIKKE-Launcher-Check/commit/8a823d59e4d32358173197e64ea0b209650feb32)指出，啟動器 Local Storage 的 LevelDB 會把紀錄移到 `.ldb` 表，資料可能經 Snappy 壓縮，鍵名也可能共用前綴；直接搜尋原始文字可能漏掉 `k2f.agent.state`。新版會先解壓並還原完整鍵名再搜尋。
 
 **本表的一鍵 PowerShell 檢查尚未加入這項解析。** 若先前只用本表指令、純文字搜尋，或 MotherSphere 舊版工具，得到「沒找到已知痕跡」或只有接觸、未見木馬的結果，建議用已正式發布的 [v0.5.1](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.1) 重新檢查，尤其是 `debug.log` 已遺失或被覆寫時：
+
+**11/5 05:16（台灣時間）新增防毒警示回報。** 一名玩家在[上游 Issue #22](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)回報，執行 v0.5.1 掃描時，Windows Defender 立即隔離檢查工具，偵測名稱為 `Trojan:Win32/Bearfoos.A!ml`。回報未附被隔離檔案的 SHA-256、Defender 引擎／安全性情報版本或完整偵測紀錄；截至本次更新，該議題尚無作者回覆，個案尚未獨立核實。**不能直接認定是誤報，也不能據此斷言檢查工具含有惡意程式。**
+
+**若防毒攔截或隔離檢查工具，先停止使用並保持隔離，不要為了執行它而關閉防毒、加入排除或還原放行。** 保留偵測名稱、時間與報告，等待工具作者或防毒廠商核實；版本與雜湊核對不能取代安全審核。
 
 1. 先保留現有日誌、快取與舊報告，**不要為了重查而開啟 NIKKE 啟動器，也不要先刪 `tbs_cache`**。
 2. 從 [v0.5.1 發布頁](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.1)取得 Windows 版 `nikke-check-windows-x86_64.exe` 和**同版本**的 `SHA256SUMS.txt`，依[下載核對說明](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.5.1/docs/usage.md#check-the-download)比對 SHA-256。這是未簽章的第三方檢查工具，不是遊戲官方程式；雜湊相符只確認下載一致，不等於完整安全審核。
@@ -273,6 +277,7 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 - [MotherSphere 事件調查](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5)：痕跡、時間線、處置建議
 - MotherSphere [NIKKE-Launcher-Check](https://github.com/MotherSphere/NIKKE-Launcher-Check)：[事件細節](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/incident.md)、[處置方式](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/what-to-do.md)、[檢查項目](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/checks.md)
 - [Google Play Games PC 版玩家回報（11/5 03:39 發表、03:41 更新，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6640267816)：單機搜尋摘要，尚未獨立證實
+- [v0.5.1 被 Defender 隔離的玩家回報（11/5 05:16，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)：單一未核實回報，尚無作者回覆；不能據此裁定誤報或工具惡意
 - [WormW 樣本分析](https://github.com/WormW/nikke_malware_analysis)：攻擊路徑、[11/4 CDN 複查](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)
 - [巴哈姆特整理文（11/4 更新）](https://forum.gamer.com.tw/C.php?bsn=36390&snA=23304)
 - [國際版官方 X 公告](https://x.com/NIKKE_en/status/2117817602659770434)、[台港澳官方公告頁](https://nikke.hotcool.tw/news.html)、[國際版官方公告頁](https://nikke-en.com/news.html)
