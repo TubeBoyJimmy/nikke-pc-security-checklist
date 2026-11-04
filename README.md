@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-04 14:36（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-04 16:31（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -41,16 +41,19 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 |---|---|
 | 9/27 | `insightjs[.]com` 被註冊；同一天 CDN 上 4 個 JS 檔被改 |
 | 10/24 00:40 | 目前公開最早的木馬執行紀錄。另有玩家回報 9/30、10/15 的 DNS 紀錄就出現這個網域，實際開始時間可能更早 |
-| 10/28 | `FeedList.feb647c9.js` 在源站被清掉，但部分 CDN 節點還在送舊檔 |
+| 10/28 | 先前證據包稱 `FeedList.feb647c9.js` 在源站被清掉、部分 CDN 節點仍送舊檔；最新研究未裁定源站與中間快取的差異，不能把此解釋當成已確認事實 |
 | 11/4 01:04–01:21 | 另外 3 個被改的檔案換回乾淨版本 |
 | 11/4 02:31 | 攻擊者的木馬伺服器停止回應 |
 | 11/4 06:26、10:01–10:07 | 研究者仍從部分 CDN 節點拿到被改過的 `FeedList.feb647c9.js` |
 | 11/4 11:13 | 國際版官方在 X 發布公告 |
 | **11/4 13:52** | 本表補充抽查：本次網路路徑取得 `FeedList.feb647c9.js`、`aegis-fix.min.js`、`vue-bucket.min.js`、`images.7fec4c32.js` 的內容，SHA-256 均符合研究者公布的乾淨版本。**不代表全球 CDN 節點都已清除** |
+| **11/4 15:14–15:20** | WormW 重新 GET 四個已知官方 JS，均取得乾淨內容；`FeedList` 原 URL 與加上查詢參數的請求均為 5,099 bytes。這是研究者抽查結果，**不是官方全節點清除確認** |
 
-**最新抽查已有改善，但仍先別開啟動器。** 13:52 的檢查只讀取這四個檔案並計算雜湊，沒有執行 JavaScript。`FeedList` 這次收到 5,099 bytes，SHA-256 為 `49b625b30b34dc1fa16edba30bdf63c18b6171a0fc4cf030e21ea4e1263ae18a`，與[已知乾淨版對照](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)相符。回應的 `Date` 是 03:12 UTC，並非本次取得時間，因此不能當作即時源站或全節點驗證。
+**13:52 本表抽查已有改善，但仍先別開啟動器。** 當時的檢查只讀取這四個檔案並計算雜湊，沒有執行 JavaScript。`FeedList` 這次收到 5,099 bytes，SHA-256 為 `49b625b30b34dc1fa16edba30bdf63c18b6171a0fc4cf030e21ea4e1263ae18a`，與[已知乾淨版對照](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)相符。回應的 `Date` 是 03:12 UTC，並非本次取得時間，因此不能當作即時源站或全節點驗證。
 
-上午取得污染副本的紀錄仍保留為歷史觀察；最新單一路徑抽查也不能證明所有地方都已安全，更不會清掉玩家電腦上的舊快取或既有感染。請繼續等官方說明影響範圍與後續處置。
+上午取得污染副本的紀錄仍保留為歷史觀察；上述單一路徑抽查也不能證明所有地方都已安全，更不會清掉玩家電腦上的舊快取或既有感染。請繼續等官方說明影響範圍與後續處置。
+
+**15:14–15:20 的複查仍有範圍限制。** [WormW 最新複查（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/docs/attack-path.md#211-官方资产当前状态2026-11-04-复核)確認上述四個物件在本次請求中已沒有已知注入特徵，但外部回應不能完全區分源站與中間快取，也不能排除其他 CDN 邊緣節點或玩家本機仍有舊檔。攻擊者如何取得寫入權限、是否還有其他受污染檔案，都尚未釐清。**這不是全面安全或感染電腦已清理的證明。**
 
 **11/4 13:53 研究補充（發布時間）：單機疑似早期中斷。** WormW 根據一台電腦的兩次日誌截圖，記錄到 `k2f_chan registered` 後出現 `invalid UTF-8` 錯誤；截圖範圍內未見 `adopted` 或 `agent started as`，因此完整遠控會話是否建立仍未證實。原始完整日誌未提供，截圖未公開入庫，研究者也未直接檢查該主機。「中文使用者路徑導致中斷」只是未證實的假說。**這個案例仍已開始執行木馬，不能當作安全或沒有外洩的證明，也不要為了驗證而重開啟動器。** [WormW 單機觀察（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/1b7a2ca164654fd1a10464e95df56c082cb026dd/docs/field-observations.md)
 
