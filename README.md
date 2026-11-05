@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-05 17:37（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-05 19:25（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -78,6 +78,7 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 | **11/5 06:41** | 作者確認 Issue #19 的 Temp 目錄命中是工具誤報；另依 Issue #11 當時的搜尋摘要判定該 Google Play Games 版個案有木馬執行 |
 | **11/5 07:00 起（官方公告時間）** | 官方公告 PC 客戶端提供本事件掃描與經同意移除功能；本表未實測部署或效果，清除前應先保全證據 |
 | **11/5 10:43** | Issue #11 玩家公開 7 組 `lua downloaded`／`k2f_chan registered` 節錄；完整原始日誌仍未獨立核驗，僅搜尋這兩類字串不能排除其他遠控紀錄或資料外洩 |
+| **11/5 19:22–19:23** | 本表唯讀複核：Verisign RDAP 顯示 `insightjs.com` 為 `client hold`，Google DNS 對主網域、`www` 與 `analytics` 的 A 查詢均回覆 NXDOMAIN；只是當時的網域狀態，不代表永久失效或主機安全 |
 
 **11/4 13:52 本表抽查已有改善，但只是有限觀察。** 當時的檢查只讀取這四個檔案並計算雜湊，沒有執行 JavaScript。`FeedList` 這次收到 5,099 bytes，SHA-256 為 `49b625b30b34dc1fa16edba30bdf63c18b6171a0fc4cf030e21ea4e1263ae18a`，與[已知乾淨版對照](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)相符。回應的 `Date` 是 03:12 UTC，並非本次取得時間，因此不能當作即時源站或全節點驗證。
 
@@ -90,6 +91,10 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 **11/5 06:41 研究者補充：疑似使用者名稱編碼問題。** MotherSphere 在 [Issue #16 回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/16#issuecomment-6644006257)中，依反編譯內容提出更具體的解釋：`sysinfo` 以 `os.getenv("USERNAME")` 讀取 Windows 系統碼頁的使用者名稱；若位元組不符合 UTF-8，JSON 編碼器就會報錯，再由 `k2f_chan` 回傳 `EIO`。作者因此將原因指向使用者名稱的編碼，而非中文路徑本身。作者另在 [Issue #21 回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/21#issuecomment-6643556395)指出，處理函式捕捉錯誤後仍維持註冊，不會因此自動解除或刪除自身。**這是作者的程式碼分析，本表未獨立核驗反編譯內容、個案完整日誌或實際載荷版本；原始 `l.js` 仍未取得，錯誤後的行為無法確認。** 不能推論所有非 ASCII 使用者名稱都有此效果，更不能當作防護或沒有外洩的證明；既有感染判定與處置不變。
 
 **19:20 的複查範圍擴及四個 CDN 節點。** [MotherSphere 晚間更新（固定版本）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5/4d9b02aa437755f376edb96403042c94898bda0a)回報，四個已知 JS 在四個 CDN IP、兩個主機名上均為乾淨內容，也檢查了 gzip 與帶查詢參數的回應。研究者因此建議：重新開啟前，先檢查或保全日誌、快取，再清除 `tbs_cache`，並持續封鎖已知攻擊網域與 IP。**這不是官方全節點安全確認**；未抽查節點、入侵根因仍有疑問，本機舊快取及既有感染也不會自動清除。封鎖目前的網域與 IP，亦不能防止攻擊者改用新位置。
+
+**11/5 19:22–19:23（台灣時間）網域狀態複核。** MotherSphere 的[最新回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6459160)回報 `insightjs.com` 已遭註冊商暫停解析（registrar hold）。本表隨後直接讀取 [Verisign RDAP](https://rdap.verisign.com/com/v1/domain/insightjs.com)，確認狀態含 `client hold`，名稱伺服器為 `NS1.SUSPENDED-DOMAIN.COM`、`NS2.SUSPENDED-DOMAIN.COM`；同時透過 Google Public DNS 查詢 [`insightjs.com`](https://dns.google/resolve?name=insightjs.com&type=A)、[`www.insightjs.com`](https://dns.google/resolve?name=www.insightjs.com&type=A)、[`analytics.insightjs.com`](https://dns.google/resolve?name=analytics.insightjs.com&type=A) 的 A 紀錄，三者均回覆 `Status: 3`（NXDOMAIN），沒有位址答案。RDAP 的 `last changed` 為 **11/5 10:05:09（台灣時間）**，但不是專門記錄 hold 生效時間的欄位，不能單憑它確定精確停用起點。
+
+**這不是永久失效、其他途徑已排除或感染電腦安全的證明。** [ICANN 對 `clientHold` 的說明](https://www.icann.org/resources/pages/epp-status-codes-2014-06-16-en)指出此狀態會停止網域的 DNS 解析，也可以解除。以上只反映該時段的註冊資料及一個公共解析器的查詢，不涵蓋所有 DNS 快取、`insightjs.org`、直接 IP 或其他投遞／遠控位置，也不會清除既有感染或撤回外洩資料。本次沒有造訪可疑站點、連線已知攻擊 IP 或執行載荷；**既有網域／IP 封鎖、證據保全、隔離及帳號保護建議不變，感染判定與腳本未修改**。
 
 ### 舊的陰性結果建議重查
 
@@ -316,6 +321,7 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 
 ## 資料來源
 
+- [註冊商 hold 研究者回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6459160)、[Verisign RDAP](https://rdap.verisign.com/com/v1/domain/insightjs.com)與 Google Public DNS（[主網域](https://dns.google/resolve?name=insightjs.com&type=A)、[`www`](https://dns.google/resolve?name=www.insightjs.com&type=A)、[`analytics`](https://dns.google/resolve?name=analytics.insightjs.com&type=A)）：11/5 19:22–19:23（台灣時間）獨立唯讀複核；查詢結果可隨時間改變，不代表主機安全
 - [MotherSphere 事件調查](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5)：痕跡、時間線、處置建議
 - MotherSphere [NIKKE-Launcher-Check](https://github.com/MotherSphere/NIKKE-Launcher-Check)：[事件細節](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/incident.md)、[處置方式](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/what-to-do.md)、[檢查項目](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/checks.md)
 - [v0.5.2 正式發布（11/5 06:40，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.2)：Temp 誤報修正、Google Play Games 版辨識與啟動失敗報告
