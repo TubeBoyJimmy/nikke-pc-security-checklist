@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-05 08:23（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-05 10:53（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -71,10 +71,11 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 | **11/4 21:02** | MotherSphere 原始碼新增 CEF 登入資料夾檢查，並修正僅因啟動器執行中而判感染；當時尚未發布，後續已納入 v0.5.1 |
 | **11/4 21:39** | MotherSphere 正式發布 v0.5.1，包含上述修正，並新增 Google Play Games 版的 `nikke_launcher_google` 資料夾檢查 |
 | **11/5 01:13–01:34** | 玩家新增 gzip 快取漏檢及 Temp 名稱疑似誤報回報；個案尚待核實，詳見下方檢查限制 |
-| **11/5 03:39–03:41** | 一名 Google Play Games PC 版玩家回報日誌搜尋命中 `k2f_chan`、`insight.bundle`；原始行未公開，尚未獨立證實，詳見下方說明 |
+| **11/5 03:39–03:41** | 一名 Google Play Games PC 版玩家回報日誌搜尋命中 `k2f_chan`、`insight.bundle`；當時只附搜尋摘要，後於 10:43 公開命中節錄，完整原檔仍未獨立核驗 |
 | **11/5 06:40** | MotherSphere 正式發布 v0.5.2：縮小 Temp 檔名比對、排除目錄，補強 Google Play Games 版辨識，並區分木馬載入後啟動失敗的報告；後者仍列為 critical |
-| **11/5 06:41** | 作者確認 Issue #19 的 Temp 目錄命中是工具誤報；另依 Issue #11 的搜尋摘要判定該 Google Play Games 版個案有木馬執行，仍未公開原始命中行 |
+| **11/5 06:41** | 作者確認 Issue #19 的 Temp 目錄命中是工具誤報；另依 Issue #11 當時的搜尋摘要判定該 Google Play Games 版個案有木馬執行 |
 | **11/5 07:00 起（官方公告時間）** | 官方公告 PC 客戶端提供本事件掃描與經同意移除功能；本表未實測部署或效果，清除前應先保全證據 |
+| **11/5 10:43** | Issue #11 玩家公開 7 組 `lua downloaded`／`k2f_chan registered` 節錄；完整原始日誌仍未獨立核驗，僅搜尋這兩類字串不能排除其他遠控紀錄或資料外洩 |
 
 **11/4 13:52 本表抽查已有改善，但只是有限觀察。** 當時的檢查只讀取這四個檔案並計算雜湊，沒有執行 JavaScript。`FeedList` 這次收到 5,099 bytes，SHA-256 為 `49b625b30b34dc1fa16edba30bdf63c18b6171a0fc4cf030e21ea4e1263ae18a`，與[已知乾淨版對照](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)相符。回應的 `Date` 是 03:12 UTC，並非本次取得時間，因此不能當作即時源站或全節點驗證。
 
@@ -122,13 +123,15 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 本次只更新上游狀態與使用說明，**本表腳本與感染判定未修改**。v0.5.2 仍未補上 gzip HTTP 快取解壓檢查，不能把版本更新當成所有漏檢都已修復。
 
-### Google Play Games 版：作者已回覆，原始證據仍有限
+### Google Play Games 版：已公開命中節錄，完整原檔未核驗
 
 **11/5 03:39（台灣時間）發表、03:41 更新的[上游 Issue #11 留言](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6640267816)**，一名使用 Google Play Games 安裝 NIKKE PC 版的玩家貼出 PowerShell 搜尋摘要：`C:\NIKKE_GOOGLE\Launcher\intl_service\debug.log` 命中 `k2f_chan`，兩個 tinyget 日誌命中 `insight.bundle`。玩家另回報執行檔名為 `nikke_launcher_google.exe`，與一般版不同。
 
-**作者於 11/5 06:41 [回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6644005418)，依這份搜尋摘要判定木馬曾在該電腦執行，Google Play Games 版也載入了污染檔案，並建議按感染處理。** 這是作者對玩家摘要的判讀；原始命中行、完整日誌及同一下載任務的成功結果仍未公開，本表未獨立核驗原檔。不能從日誌檔名單獨推定感染日期、認定哪些資料外洩，或推論所有 Google Play Games 版玩家都受影響。
+**作者於 11/5 06:41 [回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6644005418)，依當時的搜尋摘要判定木馬曾在該電腦執行，Google Play Games 版也載入了污染檔案，並建議按感染處理。** 玩家於 **11/5 10:43:31（台灣時間）[補充公開命中節錄](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6648246141)**，共有 7 組 `lua downloaded` 與 `k2f_chan registered`，日期標記為 11/1、11/2（該電腦當地時間，未換算為台灣時間）。這比先前只有檔案路徑與關鍵字的摘要更具體，但仍是**玩家提供的公開節錄，完整原始日誌及下載任務結果尚未獨立核驗**，不能據此認定哪些資料外洩，或推論所有 Google Play Games 版玩家都受影響。
 
-該玩家沒有找到 `tbs_cache`，但自述可能曾手動刪除，因此缺少快取不能當作未受影響的證明。使用此版本的玩家，請先保留現有日誌與資料，核對檢查報告是否涵蓋實際安裝位置（該回報為 `C:\NIKKE_GOOGLE\Launcher`）與 `%APPDATA%\nikke_launcher_google`，不要只因資料夾沒有命中就排除。**本次只補充回報與限制，不改動既有腳本或感染判定。**
+**節錄沒有其他字串，不代表原始日誌沒有其他遠控紀錄。** 玩家使用的指令只篩選 `lua downloaded`、`k2f_chan registered`，並未搜尋 `adopted` 或 `agent started as`；不能從這份輸出推定遠控會話未建立、木馬早期中斷或沒有外洩。玩家另回報指定 DLL 與登錄鍵檢查未命中，並嘗試對照 NetworkUsageView／SRUM 時間；這些仍是個案回報，不能排除其他常駐，也不能把時間相關或流量紀錄直接認定為外洩內容。
+
+該玩家先前沒有找到 `tbs_cache`，但自述可能曾手動刪除；10:43 的留言又回報，重開後在 `%APPDATA%\nikke_launcher_google` 產生新快取。這是其個案的路徑觀察，缺少舊快取仍不能當作未受影響的證明。**不要為了重現或確認資料夾而重開啟動器。** 使用此版本的玩家，請先保留現有日誌與資料，核對檢查報告是否涵蓋實際安裝位置（該回報為 `C:\NIKKE_GOOGLE\Launcher`）與 `%APPDATA%\nikke_launcher_google`，不要只因資料夾沒有命中就排除。**本次只補充回報與限制，不改動既有腳本或感染判定。**
 
 ### 11/5 檢查限制與誤報修正
 
@@ -306,7 +309,7 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 - [MotherSphere 事件調查](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5)：痕跡、時間線、處置建議
 - MotherSphere [NIKKE-Launcher-Check](https://github.com/MotherSphere/NIKKE-Launcher-Check)：[事件細節](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/incident.md)、[處置方式](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/what-to-do.md)、[檢查項目](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/checks.md)
 - [v0.5.2 正式發布（11/5 06:40，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.2)：Temp 誤報修正、Google Play Games 版辨識與啟動失敗報告
-- [Google Play Games PC 版玩家摘要](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6640267816)與[作者回覆（11/5 06:41，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6644005418)：作者依摘要判定木馬執行，本表未獨立核驗原檔
+- [Google Play Games PC 版玩家摘要](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6640267816)、[作者回覆（11/5 06:41，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6644005418)與[玩家公開命中節錄（11/5 10:43:31，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6648246141)：查核至 11/5 10:53；已公開 7 組兩類字串節錄，完整原始日誌尚未獨立核驗
 - [v0.5.1 被 Defender 隔離的玩家回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)與[作者更新（11/5 08:14，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6643556806)：作者主張誤報並表示已提交 Microsoft 申訴，議題仍開啟，未見廠商裁定
 - [Temp 誤報確認（11/5 06:41，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/19#issuecomment-6644006713)、[gzip 快取漏看作者回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6457471)
 - [WormW 樣本分析](https://github.com/WormW/nikke_malware_analysis)：攻擊路徑、[11/4 CDN 複查](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)
