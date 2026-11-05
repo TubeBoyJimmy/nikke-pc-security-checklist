@@ -1,12 +1,12 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-05 12:52（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-05 17:37（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
 **9/27 之後在電腦上開過 NIKKE 啟動器的人，不管有沒有中，都建議先做：**
 
-1. **先別重開 PC 版啟動器；先保全日誌與快取，完成安全檢查。** 官方已公告清除功能，但它在取得同意後會刪除相關日誌、DLL 與登錄資料，詳見[官方最新措施](#官方說法)。
+1. **先別更新或重開 PC 版啟動器；先保全日誌、快取與報告，完成安全檢查。** 官方公告的清除功能會在取得同意後刪除相關日誌、DLL 與登錄資料；另有玩家尚未獨立驗證的更新後日誌消失回報，詳見[官方最新措施與保全提醒](#官方說法)。
 2. **用手機改 NIKKE（Level Infinite）帳號密碼，並登出所有裝置。** 同一組密碼也用在別處的，一起換掉。
 3. **跑一次[一鍵檢查](WINDOWS-CHECKS.md#一鍵檢查)**，照結果決定下一步。
 
@@ -43,7 +43,9 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 - **帳號保護與申報：** 官方要求更改在受影響電腦使用過的帳號密碼，撤銷並重發曾使用或儲存的 API 金鑰與 access token；疑似外部帳號或金錢損失可向客服申報。本表仍建議用手機或另一台乾淨裝置處理帳號，不必等電腦清完。
 - **後續防護承諾：** 官方將強化監控、建立外部資源完整性驗證，並檢討、降低啟動器權限。公告沒有表示這些措施都已完成，入侵根因及受影響程度仍在調查。
 
-**清除前先保全證據。** 官方功能可能刪掉相關日誌；若要留存、交給 IT 或釐清個案，請先依[清理前備份](#4-清理電腦)保存日誌、快取與報告，再決定是否同意清除。這是本表的證據保全提醒，不是官方已提供備份功能。已隔離的電腦維持離線，**不要只為了觸發掃描或確認有沒有提示而重開啟動器**。官方手動指南同樣要求先斷網、完全關閉遊戲、啟動器與 Chrome，檢查完成前不要重開。
+**任何啟動器更新、重開或清除之前，先保全證據。** 若要留存、交給 IT 或釐清個案，請先依[清理前備份](#4-清理電腦)保存日誌、快取與報告，不要等到清除同意視窗才備份。這是本表的證據保全提醒，不是官方已提供備份功能。已隔離的電腦維持離線，**不要只為了觸發掃描或確認有沒有提示而重開啟動器**。官方手動指南同樣要求先斷網、完全關閉遊戲、啟動器與 Chrome，檢查完成前不要重開。
+
+**11/5 17:28 發表、17:29 更新（台灣時間）的[單一玩家回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6654463139)：** 該玩家自述把現有安裝移到舊筆電測試更新後，`debug.log` 被刪除，且沒有顯示結果。**本表未獨立重現；留言未交代確切版本、刪除機制或是否曾同意清除，不能推論所有更新都如此，也不能宣稱 ACE 未經同意刪除。** 這項未驗證回報補強了「更新或重開之前就先備份」的保守建議，沒有改變官方公告所述的同意流程。
 
 **官方手動檢查也不是完整排除。** 指南以 `debug.log` 的 `k2f_chan registered` 為主要搜尋項目，並明說沒找到仍不能排除風險。它列出一般版與 `NIKKE_GOOGLE` 日誌位置，但快取清理只明列 `%APPDATA%\nikke_launcher\tbs_cache`；沒有補齊本表下述 CEF、LevelDB、gzip 等掃描限制，也未公開 ACE 的完整檢查清單、版本或雜湊。官方的已知惡意程式移除，不能當作已排除任意指令留下的其他變更，或已撤回外洩資料的證明。
 
@@ -133,6 +135,8 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 **節錄沒有其他字串，不代表原始日誌沒有其他遠控紀錄。** 玩家使用的指令只篩選 `lua downloaded`、`k2f_chan registered`，並未搜尋 `adopted` 或 `agent started as`；不能從這份輸出推定遠控會話未建立、木馬早期中斷或沒有外洩。玩家另回報指定 DLL 與登錄鍵檢查未命中，並嘗試對照 NetworkUsageView／SRUM 時間；這些仍是個案回報，不能排除其他常駐，也不能把時間相關或流量紀錄直接認定為外洩內容。
 
+**tinyget 檔名日期不能直接當成請求日期。** 作者於 **11/5 17:14（台灣時間）[更正先前說法](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6654206829)**：檔名反映建立時間，文字日誌可能繼續記錄同次啟動中較晚的請求；需核對命中行的時間戳及檔案實際內容。不能只憑 `tinyget.20261028-103204-028.log` 的名稱認定 10/28 已下載木馬，也不能把這項更正當作其他較早研究紀錄已被推翻。本表尚未取得該檔案的補充核對結果。
+
 該玩家先前沒有找到 `tbs_cache`，但自述可能曾手動刪除；10:43 的留言又回報，重開後在 `%APPDATA%\nikke_launcher_google` 產生新快取。這是其個案的路徑觀察，缺少舊快取仍不能當作未受影響的證明。**不要為了重現或確認資料夾而重開啟動器。** 使用此版本的玩家，請先保留現有日誌與資料，核對檢查報告是否涵蓋實際安裝位置（該回報為 `C:\NIKKE_GOOGLE\Launcher`）與 `%APPDATA%\nikke_launcher_google`，不要只因資料夾沒有命中就排除。**本次只補充回報與限制，不改動既有腳本或感染判定。**
 
 ### 11/5 檢查限制與誤報修正
@@ -147,6 +151,10 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 **11/5 補充研究限制，並非新增感染案例。** [MotherSphere 原留言](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6456552)指出，該討論中尚無人公開早期負責選擇下載位置、投遞木馬的 `l.js`。[WormW 固定版本分析](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/docs/attack-path.md#0-证据来源与结论边界)取得的 9,145 bytes 副本，是 **11/4 01:30（台灣時間）後被換成的 `/speed` 分析版本，不是早期惡意投遞版**。不能用這份事後副本證明先前腳本沒有其他功能。
 
 MotherSphere 表示，該討論已貼出的 `insight.bundle` 下載網址都指向 `analytics.insightjs.com`，尚無其他主機或 IP 投遞的回報；但缺少當時的 `l.js`，**仍不能完整排除其他投遞路徑**。已知紀錄支持透過 `Srv_DownloadFile` 下載後，木馬隨即在啟動器內執行；具體由哪個原生橋呼叫觸發執行，仍未確認。
+
+**11/5 17:14（台灣時間），作者補充了 Lua 樣本的觸發界限。** [Issue #17 回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/17#issuecomment-6654207517)稱，所分析的 11/3 構建最上層只註冊 `k2f_chan`，包括 `keyscan` 在內的命令由指定命令名稱的 `open` 請求觸發；伺服器回應則由 `l.js` 處理。**本表未獨立核驗反編譯內容，不能套用到所有構建；因缺少當時的 `l.js`，仍無法判定 `keyscan` 是腳本啟動時自動要求，還是遠端指令觸發。** 不能把「Lua 不自行發起命令」解讀成初始腳本沒有其他能力或沒有外洩。
+
+**同日 17:14 的 [Issue #25 作者回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6654208278)僅支持兩台電腦的個案觀察。** 作者表示，兩例都在啟動器頁面載入時執行 loader，之後保持開啟數日而未重載頁面，紀錄未見要求下載木馬；作者明說兩台不足以成為通則，也不知道所有會重載頁面的情境。本表未獨立核驗完整原檔，**不能據此建議保持啟動器開啟，或保證其他僅有接觸紀錄的人安全**。
 
 這是公開證據的缺口，**不是已證實初始腳本能獨立竊密，也不能只憑接觸紀錄改判感染**。請保留現有日誌與快取；本次不改動既有腳本、感染判定或處置步驟。
 
@@ -226,7 +234,7 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 
 ### 5. 重新使用啟動器之前
 
-- 先完成安全檢查與必要處置。官方已公告修復與清除功能，但本表未實測其部署或效果；不要把沒有跳出警示當作電腦乾淨的證明。需要留證時，在同意任何清除前先備份。
+- 先完成安全檢查與必要處置。官方已公告修復與清除功能，但本表未實測其部署或效果；不要把沒有跳出警示當作電腦乾淨的證明。需要留證時，在任何啟動器更新、重開或同意清除前先備份。
 - 先刪掉啟動器快取 `%APPDATA%\nikke_launcher*\tbs_cache`，裡面可能還留著被改過的檔案。需要留存資料的話，先照第 4 步複製。[刪除指令在這裡](WINDOWS-CHECKS.md#重新開啟動器前先刪快取)。
 - 之後幾週多留意帳號的登入紀錄和金融交易。
 
@@ -314,6 +322,8 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 - [Google Play Games PC 版玩家摘要](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6640267816)、[作者回覆（11/5 06:41，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6644005418)與[玩家公開命中節錄（11/5 10:43:31，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6648246141)：查核至 11/5 10:53；已公開 7 組兩類字串節錄，完整原始日誌尚未獨立核驗
 - [v0.5.1 被 Defender 隔離的玩家回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)與[作者更新（11/5 08:14，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6643556806)：作者主張誤報並表示已提交 Microsoft 申訴，議題仍開啟，未見廠商裁定
 - [Temp 誤報確認（11/5 06:41，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/19#issuecomment-6644006713)、[gzip 快取漏看作者回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6457471)
+- [更新後日誌消失的單一玩家回報（11/5 17:28 發表、17:29 更新，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6654463139)：未獨立驗證，版本、刪除機制與同意流程不明
+- [tinyget 日期更正](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6654206829)、[Lua 命令觸發界限](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/17#issuecomment-6654207517)、[兩個 loader-only 個案的限制](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6654208278)：作者均於 11/5 17:14（台灣時間）回覆；本表未獨立核驗個案原檔或反編譯內容
 - [WormW 樣本分析](https://github.com/WormW/nikke_malware_analysis)：攻擊路徑、[11/4 CDN 複查](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)
 - [巴哈姆特整理文（11/4 更新）](https://forum.gamer.com.tw/C.php?bsn=36390&snA=23304)
 - [11/5 官方道歉聲明](https://nikke-en.com/newsdetail.html?content_id=3a94ebf0ab6c5a4703aa87aa57d0b8cd3d4b)：11/5 08:22（台灣時間）讀取全文；目前啟動器安全為官方聲明，遊戲內補償細節未在此頁公布
