@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-05 10:53（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-05 12:52（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -84,6 +84,8 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 **15:14–15:20 的複查仍有範圍限制。** [WormW 最新複查（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/docs/attack-path.md#211-官方资产当前状态2026-11-04-复核)確認上述四個物件在本次請求中已沒有已知注入特徵，但外部回應不能完全區分源站與中間快取，也不能排除其他 CDN 邊緣節點或玩家本機仍有舊檔。攻擊者如何取得寫入權限、是否還有其他受污染檔案，都尚未釐清。**這不是全面安全或感染電腦已清理的證明。**
 
 **11/4 13:53 研究補充（發布時間）：單機疑似早期中斷。** WormW 根據一台電腦的兩次日誌截圖，記錄到 `k2f_chan registered` 後出現 `invalid UTF-8` 錯誤；截圖範圍內未見 `adopted` 或 `agent started as`，因此完整遠控會話是否建立仍未證實。原始完整日誌未提供，截圖未公開入庫，研究者也未直接檢查該主機。「中文使用者路徑導致中斷」只是未證實的假說。**這個案例仍已開始執行木馬，不能當作安全或沒有外洩的證明，也不要為了驗證而重開啟動器。** [WormW 單機觀察（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/1b7a2ca164654fd1a10464e95df56c082cb026dd/docs/field-observations.md)
+
+**11/5 06:41 研究者補充：疑似使用者名稱編碼問題。** MotherSphere 在 [Issue #16 回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/16#issuecomment-6644006257)中，依反編譯內容提出更具體的解釋：`sysinfo` 以 `os.getenv("USERNAME")` 讀取 Windows 系統碼頁的使用者名稱；若位元組不符合 UTF-8，JSON 編碼器就會報錯，再由 `k2f_chan` 回傳 `EIO`。作者因此將原因指向使用者名稱的編碼，而非中文路徑本身。作者另在 [Issue #21 回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/21#issuecomment-6643556395)指出，處理函式捕捉錯誤後仍維持註冊，不會因此自動解除或刪除自身。**這是作者的程式碼分析，本表未獨立核驗反編譯內容、個案完整日誌或實際載荷版本；原始 `l.js` 仍未取得，錯誤後的行為無法確認。** 不能推論所有非 ASCII 使用者名稱都有此效果，更不能當作防護或沒有外洩的證明；既有感染判定與處置不變。
 
 **19:20 的複查範圍擴及四個 CDN 節點。** [MotherSphere 晚間更新（固定版本）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5/4d9b02aa437755f376edb96403042c94898bda0a)回報，四個已知 JS 在四個 CDN IP、兩個主機名上均為乾淨內容，也檢查了 gzip 與帶查詢參數的回應。研究者因此建議：重新開啟前，先檢查或保全日誌、快取，再清除 `tbs_cache`，並持續封鎖已知攻擊網域與 IP。**這不是官方全節點安全確認**；未抽查節點、入侵根因仍有疑問，本機舊快取及既有感染也不會自動清除。封鎖目前的網域與 IP，亦不能防止攻擊者改用新位置。
 
