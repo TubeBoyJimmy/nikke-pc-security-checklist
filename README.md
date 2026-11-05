@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-05 07:24（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-05 08:23（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -33,17 +33,21 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 ### 官方說法
 
-**11/5 官方已發布[後續措施](https://nikke-en.com/newsdetail.html?content_id=b4f23938a63a0a4e68aa577af395b1edb172)與[手動安全檢查指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)。** 11/4 [首次公告](https://x.com/NIKKE_en/status/2117817602659770434)之後的新進展如下：
+**11/5 官方已發布[道歉聲明](https://nikke-en.com/newsdetail.html?content_id=3a94ebf0ab6c5a4703aa87aa57d0b8cd3d4b)、[後續措施](https://nikke-en.com/newsdetail.html?content_id=b4f23938a63a0a4e68aa577af395b1edb172)與[手動安全檢查指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)。** 11/4 [首次公告](https://x.com/NIKKE_en/status/2117817602659770434)之後的新進展如下：
 
+- **道歉與目前啟動器狀態：** 官方就未能提供安全服務道歉並承擔營運責任，表示已完成必要修復及額外檢查，**宣稱目前發行的啟動器版本可安全使用**。這是官方聲明，本表未獨立驗證整個啟動器，也不代表先前受影響的電腦已清乾淨或外洩資料已收回。
+- **遊戲內補償：** 官方表示已為全體玩家準備遊戲內補償；**截至本次查核，這份道歉聲明未列品項、數量或發送時間**。這不是外部帳號或金錢損失的全面賠償承諾。
 - **檢查對象：** 官方要求 **9/27 14:41（台灣時間；15:41 UTC+9）後開過 Windows PC 啟動器**的人檢查。本表原本採用整個 9/27 起的保守範圍，未縮短。官方同時表示，**手機版本未受這次事件影響**，只玩手機版的人不需為此事件額外檢查。
 - **CDN 修復：** 官方稱 11/4 01:04–01:23 已替換三個異常腳本，**11/4 11:09 完成最後一個異常檔案的 CDN 快取刷新，之後逐步部署到相關節點**。這不是本表獨立驗證所有節點同時乾淨的結果。
 - **官方清除功能：** 公告稱 **11/5 07:00（台灣時間；08:00 UTC+9）起**，PC 客戶端提供本事件惡意程式的掃描與移除功能（手動指南稱為 ACE）。檢出後會顯示視窗，**徵得同意才刪除相關日誌、DLL 與登錄資料**；未檢出則可能直接啟動遊戲而沒有額外提示。本表只核對公告，**未實測功能部署、涵蓋範圍或清除效果**。
-- **帳號保護與申報：** 官方要求更改在受影響電腦使用過的帳號密碼，撤銷並重發曾使用或儲存的 API 金鑰與 access token；疑似外部帳號或金錢損失可向客服申報。公告沒有承諾全面賠償。本表仍建議用手機或另一台乾淨裝置處理帳號，不必等電腦清完。
+- **帳號保護與申報：** 官方要求更改在受影響電腦使用過的帳號密碼，撤銷並重發曾使用或儲存的 API 金鑰與 access token；疑似外部帳號或金錢損失可向客服申報。本表仍建議用手機或另一台乾淨裝置處理帳號，不必等電腦清完。
 - **後續防護承諾：** 官方將強化監控、建立外部資源完整性驗證，並檢討、降低啟動器權限。公告沒有表示這些措施都已完成，入侵根因及受影響程度仍在調查。
 
 **清除前先保全證據。** 官方功能可能刪掉相關日誌；若要留存、交給 IT 或釐清個案，請先依[清理前備份](#4-清理電腦)保存日誌、快取與報告，再決定是否同意清除。這是本表的證據保全提醒，不是官方已提供備份功能。已隔離的電腦維持離線，**不要只為了觸發掃描或確認有沒有提示而重開啟動器**。官方手動指南同樣要求先斷網、完全關閉遊戲、啟動器與 Chrome，檢查完成前不要重開。
 
 **官方手動檢查也不是完整排除。** 指南以 `debug.log` 的 `k2f_chan registered` 為主要搜尋項目，並明說沒找到仍不能排除風險。它列出一般版與 `NIKKE_GOOGLE` 日誌位置，但快取清理只明列 `%APPDATA%\nikke_launcher\tbs_cache`；沒有補齊本表下述 CEF、LevelDB、gzip 等掃描限制，也未公開 ACE 的完整檢查清單、版本或雜湊。官方的已知惡意程式移除，不能當作已排除任意指令留下的其他變更，或已撤回外洩資料的證明。
+
+**手動移除條件有範圍限制。** 官方只列出 `Launcher\log\tinyget` 內 **205,135 bytes、符合 `tinyget.<日期>-<時間>.log` 格式**的下載檔；[WormW 構建紀錄（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/docs/attack-path.md#212-已知-payload-构建演进)另記錄 **165,108 bytes 的早期構建**，屬第三方報告、樣本未獨立核驗。單一大小條件不能涵蓋所有已報告構建。官方 DLL 步驟也只刪指定 Chrome 路徑中，同時符合「64 碼十六進位子目錄」及「內含 `platform_experience_helper.dll`」的項目。**沒有符合這些條件，不等於沒有執行過木馬或沒有其他常駐。** 請先保全證據，不要只憑檔案大小擴大刪除範圍；本表感染判定未改動。
 
 **官方投遞時間與研究紀錄仍有差異。** 新公告把開始投遞惡意程式的時間列為 **10/30 02:52（台灣時間；03:52 UTC+9）**；本表引用的研究紀錄早至 **10/24 00:40（台灣時間；10/23 16:40 UTC）**。兩者尚未獲解釋，本表保留並列，**不據此縮短風險期間或推翻較早的執行紀錄**。
 
@@ -88,7 +92,7 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 **本表的一鍵 PowerShell 檢查尚未加入這項解析。** 若先前只用本表指令、純文字搜尋，或 MotherSphere 舊版工具，得到「沒找到已知痕跡」或只有接觸、未見木馬的結果，建議用已正式發布的 [v0.5.2](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.2) 重新檢查，尤其是 `debug.log` 已遺失或被覆寫時：
 
-**11/5 05:16（台灣時間）新增防毒警示回報。** 一名玩家在[上游 Issue #22](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)回報，執行 v0.5.1 掃描時，Windows Defender 立即隔離檢查工具，偵測名稱為 `Trojan:Win32/Bearfoos.A!ml`。回報未附被隔離檔案的 SHA-256、Defender 引擎／安全性情報版本或完整偵測紀錄。作者於 **11/5 06:17** [回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6643556806)認為很可能是誤報，但表示無法用 Defender 重現，也不清楚為何只標記這個版本。**議題仍開啟，未見 Microsoft 裁定；不能寫成已證實誤報、已解決，也不能據此斷言工具惡意。** v0.5.2 的發布亦不等於這個防毒問題已排除。
+**11/5 05:16（台灣時間）新增防毒警示回報。** 一名玩家在[上游 Issue #22](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)回報，執行 v0.5.1 掃描時，Windows Defender 立即隔離檢查工具，偵測名稱為 `Trojan:Win32/Bearfoos.A!ml`。回報未附被隔離檔案的 SHA-256、Defender 引擎／安全性情報版本或完整偵測紀錄。作者於 **11/5 06:17** 回覆，並在 **11/5 08:14** [更新同一則留言](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6643556806)，主張這是誤報，**表示已將 v0.5.1 提交 Microsoft 申訴**，並把還原檔案的建議放在 Microsoft 確認排除偵測、更新 Defender 之後。這是作者的說明與申訴狀態，**議題仍開啟，未見 Microsoft 裁定；不能寫成已證實誤報、已解決，也不能據此斷言工具惡意。** v0.5.2 的發布亦不等於這個防毒問題已排除。
 
 **若防毒攔截或隔離檢查工具，先停止使用並保持隔離，不要為了執行它而關閉防毒、加入排除或還原放行。** 保留偵測名稱、時間與報告，等待工具作者或防毒廠商核實；版本與雜湊核對不能取代安全審核。
 
@@ -303,10 +307,11 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 - MotherSphere [NIKKE-Launcher-Check](https://github.com/MotherSphere/NIKKE-Launcher-Check)：[事件細節](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/incident.md)、[處置方式](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/what-to-do.md)、[檢查項目](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/checks.md)
 - [v0.5.2 正式發布（11/5 06:40，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.2)：Temp 誤報修正、Google Play Games 版辨識與啟動失敗報告
 - [Google Play Games PC 版玩家摘要](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6640267816)與[作者回覆（11/5 06:41，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6644005418)：作者依摘要判定木馬執行，本表未獨立核驗原檔
-- [v0.5.1 被 Defender 隔離的玩家回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)與[作者回覆（11/5 06:17，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6643556806)：作者認為很可能誤報但未重現，議題仍開啟，未見防毒廠商裁定
+- [v0.5.1 被 Defender 隔離的玩家回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)與[作者更新（11/5 08:14，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6643556806)：作者主張誤報並表示已提交 Microsoft 申訴，議題仍開啟，未見廠商裁定
 - [Temp 誤報確認（11/5 06:41，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/19#issuecomment-6644006713)、[gzip 快取漏看作者回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6457471)
 - [WormW 樣本分析](https://github.com/WormW/nikke_malware_analysis)：攻擊路徑、[11/4 CDN 複查](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)
 - [巴哈姆特整理文（11/4 更新）](https://forum.gamer.com.tw/C.php?bsn=36390&snA=23304)
-- [11/5 官方後續措施](https://nikke-en.com/newsdetail.html?content_id=b4f23938a63a0a4e68aa577af395b1edb172)、[11/5 官方手動安全檢查指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)：查核至 11/5 07:24（台灣時間），已讀取全文；未實測 ACE 部署或清除效果
+- [11/5 官方道歉聲明](https://nikke-en.com/newsdetail.html?content_id=3a94ebf0ab6c5a4703aa87aa57d0b8cd3d4b)：11/5 08:22（台灣時間）讀取全文；目前啟動器安全為官方聲明，遊戲內補償細節未在此頁公布
+- [11/5 官方後續措施](https://nikke-en.com/newsdetail.html?content_id=b4f23938a63a0a4e68aa577af395b1edb172)、[11/5 官方手動安全檢查指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)：後續措施查核至 11/5 07:24、手動指南複核至 08:22（台灣時間），均已讀取全文；未實測 ACE 部署或清除效果
 - [11/4 國際版官方首次 X 公告](https://x.com/NIKKE_en/status/2117817602659770434)、[台港澳官方公告頁](https://nikke.hotcool.tw/news.html)、[國際版官方公告頁](https://nikke-en.com/news.html)
 - [Inven Global 報導](https://www.invenglobal.com/articles/28122/is-my-pc-infected-nikke-launcher-tampering-concerns-from-attack-vector-to-remediation)
