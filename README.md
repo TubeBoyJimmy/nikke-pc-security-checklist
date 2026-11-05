@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-05 19:25（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-05 22:42（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -9,6 +9,10 @@
 1. **先別更新或重開 PC 版啟動器；先保全日誌、快取與報告，完成安全檢查。** 官方公告的清除功能會在取得同意後刪除相關日誌、DLL 與登錄資料；另有玩家尚未獨立驗證的更新後日誌消失回報，詳見[官方最新措施與保全提醒](#官方說法)。
 2. **用手機改 NIKKE（Level Infinite）帳號密碼，並登出所有裝置。** 同一組密碼也用在別處的，一起換掉。
 3. **跑一次[一鍵檢查](WINDOWS-CHECKS.md#一鍵檢查)**，照結果決定下一步。
+
+**11/5 假冒「Cleanup Tool」警告：不要執行留言要求的管理員遠端腳本。** [MotherSphere 警告](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6459938)指出，一則 **11/5 21:56（台灣時間）**留言假借清除本事件的名義，誘導使用者以管理員權限下載並執行外站腳本，讓遠端腳本能以該權限修改電腦。請勿複製執行、下載或開啟該留言提供的工具。
+
+**這是研究者指出的另一項可疑清除工具風險，與原 NIKKE 攻擊指標分開。** 本表於 **11/5 22:42（台灣時間）**核對警告，未取得或分析該腳本，不能確認其具體行為或受害範圍，也未把留言聲稱的檔名、IP、登錄項目或排程工作加入感染判定。若已執行，研究者建議把電腦視為遭該腳本入侵：先斷網、用另一台乾淨裝置保護帳號，並重裝 Windows。本表原有 NIKKE 檢查不能排除這個遠端腳本造成的風險。
 
 **11/5 檢查工具更新：先前沒找到痕跡的人，請看[重新檢查建議](#舊的陰性結果建議重查)。** 上游已發布 v0.5.2，修正部分 Temp 誤報並補強 Google Play Games 版辨識；**gzip HTTP 快取仍可能漏看**，更新工具後沒找到痕跡也不能保證安全。
 
@@ -321,6 +325,7 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 
 ## 資料來源
 
+- [MotherSphere 假冒「Cleanup Tool」警告](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6459938)：11/5 22:42（台灣時間）核對；研究者警告留言誘導管理員執行遠端腳本，本表未取得或分析腳本，與原事件 IOC 分開
 - [註冊商 hold 研究者回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6459160)、[Verisign RDAP](https://rdap.verisign.com/com/v1/domain/insightjs.com)與 Google Public DNS（[主網域](https://dns.google/resolve?name=insightjs.com&type=A)、[`www`](https://dns.google/resolve?name=www.insightjs.com&type=A)、[`analytics`](https://dns.google/resolve?name=analytics.insightjs.com&type=A)）：11/5 19:22–19:23（台灣時間）獨立唯讀複核；查詢結果可隨時間改變，不代表主機安全
 - [MotherSphere 事件調查](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5)：痕跡、時間線、處置建議
 - MotherSphere [NIKKE-Launcher-Check](https://github.com/MotherSphere/NIKKE-Launcher-Check)：[事件細節](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/incident.md)、[處置方式](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/what-to-do.md)、[檢查項目](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/checks.md)
