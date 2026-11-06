@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-06 18:51（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-06 21:51（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -144,6 +144,10 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 **該 timeout 個案仍未獨立核驗，不能當作安全證明。** 作者依玩家提供內容推測該次下載完成時，第一階段已停止等待；這不同於已出現 `k2f_chan` 後才啟動失敗，也不同於下載始終為 0 bytes。應核對同次下載結果、時間順序與完整 `debug.log`，搜尋正確字串 `k2f_chan`（不是 `k2f_registered`）。**缺少標記的解讀受日誌完整性、刪除／覆寫與掃描範圍限制；單憑 timeout、缺標記、檔案留下或沒有 DLL，都不能排除其他次執行或資料外洩。** 原始惡意 `l.js` 仍未取得，第一階段完整能力未明；保留證據與帳號防護，不以這則個案進一步降級。
 
+**11/6 21:20（台灣時間）[作者續覆 #33](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6685803432)：補上單一個案的時間差，仍不是安全結論。** 作者依該玩家日誌（當地 UTC+11）列出：23:35:41.522 加入下載任務、23:35:42.802 發出 GET、23:35:56.518 記錄 timeout，至 23:35:57.625 才完成 205,135 bytes 下載。即加入任務約 15 秒後停止等待，比下載完成早約 1.1 秒；實際下載約 14.8 秒，無法由日誌判定是伺服器或連線緩慢。作者據此及未見 `k2f_chan`，認為本體在**這台電腦最可能未載入**；單次紀錄不足以確定通用 timeout 設定，也不能套用到其他玩家。`l.js` 已在啟動器頁面執行，其原始惡意版本仍未取得，完整能力未明。**本表未獨立核驗原檔，不改變既有感染判定或帳號處置。** 作者同時明說，前述報告修正尚未完成；本次複核最新正式發布仍為 v0.5.2。
+
+作者另表示，玩家提供的 SHA-256 與已公布樣本相同（`cc0ad05bfe85940a6067b3a72c182d3953339129206634141926d5d0b35973ec`），把 ETag `6ae90538-3214f` 與 `6ae9f628-3214f` 對應到相同位元組。這是**研究者依玩家雜湊作出的構建關聯，本表未重新取得樣本驗證**；中間的 `6ae9d408` 尚無公開雜湊，是否相同仍未知。ETag／`Last-Modified` 不能直接等同上線時間；玩家電腦時鐘與同段 HTTP `Date` 也待核對，不能據此擴大或縮短感染期間。
+
 **分享報告前先去識別化，不要上傳完整快取、下載檔或 DLL。** 作者提醒 `tbs_cache` 含 Cookie／Local Storage、`tinyget.mem.log` 含 Cookie／登入票證；偽裝為 tinyget 日誌的下載檔可能是可運作的木馬。需要求助時使用工具的「Hide my info」（`--redact`），再人工檢查最小必要節錄；只提供必要時間、錯誤行或 SHA-256，不公開原檔，也不要為了辨識而開啟或執行可疑檔案。
 
 ### Google Play Games 版：已公開命中節錄，完整原檔未核驗
@@ -241,9 +245,18 @@ MotherSphere 表示，該討論已貼出的 `insight.bundle` 下載網址都指�
 
 動手前，先把一鍵檢查的結果截圖存下來。有疑點、檢查不完整，或要交給 IT 的話，先把 `Launcher\intl_service\debug.log`、`Launcher\log\`、`%APPDATA%\nikke_launcher*\tbs_cache` 複製到隨身碟或離線資料夾（不要放雲端同步，裡面有主機名稱和登入資料），再清理。
 
+**11/6 21:32（台灣時間）[作者補充取證方式與工具涵蓋限制](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6686028635)。** 若需要釐清已確認常駐的電腦或交給 IT，請在清除、重開或重灌之前，由具備經驗的人員保全：
+
+- **先記錄原位置的資料夾／DLL 路徑、大小、UTC 建立與修改時間及 SHA-256，再複製。** 副本可能產生新的建立時間，不能拿副本時間反推感染時點。記下擷取時間與時區；輸出明確指定到另一顆磁碟或離線隨身碟，不要只給檔名，避免管理員終端機把檔案寫進即將清除的 `C:\Windows\System32`。
+- **登錄取證須對準受影響的 Windows 使用者。** 作者建議用 `reg save` 保全已知 HKCU CLSID 鍵的 hive 與最後寫入時間，而不是會漏掉這項時間的 `reg export`。若提權時換成另一個管理員帳號，`HKCU` 可能指向錯的人；不能把該帳號的空結果當成受影響帳號陰性。BAM 程序活動則在 **`HKLM\SYSTEM` 的 SYSTEM hive**，不是 HKCU；Prefetch 與 SYSTEM hive 可交給 IT 交叉分析。作者稱 BAM 記錄約保留最近一週，實際可用範圍受系統與保留狀況影響。這些活動痕跡本身不能證明由木馬 `exec` 觸發，缺少痕跡也不能排除執行。
+- **清理程式提到的位置，只能作待核對線索。** 作者指出所分析 agent 的清理碼會刪除 Chrome `Application\PlatformExperienceHelper`（`Program Files`、`Program Files (x86)` 與 `%LOCALAPPDATA%\Google\Chrome\Application` 下）中的 `platform_experience_helper.dll`、`platform_experience_helper.dll.old`、`old-clsid.txt`，以及工作目錄中的 `service_util.dll`；工作目錄「最可能是 NIKKE `Launcher`」仍是推測。這暗示可能有較早版本使用這些名稱，**不是已核實各位置、各同名檔案皆具惡意用途，也不是新增投遞路徑或可直接刪除的 IOC 清單**。若有發現，保留原件資訊與離線副本供分析，不要執行、公開上傳或只憑名稱刪除。
+- **不要把不同工具的涵蓋範圍混在一起。** 作者稱 nikke-check 未查上述清理線索位置；本表既有 PowerShell 已列三類 Chrome `Application\PlatformExperienceHelper` 位置與前三個檔名，但未新增針對 `Launcher\service_util.dll` 的專門檢查。這次僅補充文件，不修改腳本、既有判定或擴大刪除清單；陰性結果不能用來保證所有位置都已查過。
+
+登錄 hive、Prefetch、日誌與 DLL 都可能含私人資訊；僅離線保存並交給獲授權的協助者，不上傳公開 repo、議題或樣本服務。這些是研究者提供的保全方向，本表未在玩家電腦驗證。
+
 **最保險的做法是重灌 Windows。** 木馬能執行任何指令，沒人知道攻擊者當時還做了什麼。先備份個人檔案（照片、文件），不要備份舊的程式、整個瀏覽器設定或啟動器快取，再用可信的安裝媒體重灌。
 
-**11/6 18:51（台灣時間）常駐範圍提醒：不要把 DLL 的載入程序限定為 Chrome。** [單一玩家回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6682079803)自述 `steamwebhelper.exe` 與 `runeapps.alt1.exe` 載入同一個 Chrome 目錄內的 DLL；[作者回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6682943355)（18:40 發表、18:45 更新）以所分析構建的 **HKCU COM 劫持**解釋：同一使用者下會要求該 Windows Parental Controls COM 物件的其他相容程序，也可能載入已落地的 DLL。**本表未獨立核驗該玩家實機或 DLL，作者也未核驗 Steam／Alt1 的構建；其他 Chromium 程式尚未經此回報驗證。這不是 Steam、Alt1 或其他遊戲成為新投遞來源的證據，也不證明其中資料已外洩。**
+**11/6 18:51（台灣時間）常駐範圍提醒：不要把 DLL 的載入程序限定為 Chrome。** [單一玩家回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6682079803)自述 `steamwebhelper.exe` 與 `runeapps.alt1.exe` 載入同一個 Chrome 目錄內的 DLL；[作者回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6682943355)（18:40 發表、18:45 更新）以所分析構建的 **HKCU COM 劫持**提出解釋；[21:32 續覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6686028635)明確保留為**最可能的推測，尚未檢查 Steam／Alt1 構建**：同一使用者下會要求該 Windows Parental Controls COM 物件的其他相容程序，也可能載入已落地的 DLL。**本表未獨立核驗該玩家實機或 DLL，作者也未核驗 Steam／Alt1 的構建；其他 Chromium 程式尚未經此回報驗證。這不是 Steam、Alt1 或其他遊戲成為新投遞來源的證據，也不證明其中資料已外洩。**
 
 若報告已列出 DLL 被程序載入，維持離線，從系統匣完整結束相關主程式；只關視窗或結束 `steamwebhelper.exe`，主程式可能再次啟動它。仍按下列順序**先移除已確認的 HKCU 常駐鍵、保留正常 HKLM 的 `wpc.dll`，再重開 Windows 使各程序卸載 DLL**，刪除已確認的惡意子資料夾並複查；不要為了測試載入而開啟其他程式。從乾淨裝置保護可能在受影響程序輸入或顯示過的帳號資料；例如使用過 Steam／Alt1 者，檢視相關帳號並撤銷工作階段。這是保守處置，不是宣告每位玩家都受此路徑影響。
 
@@ -343,6 +356,9 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 **11/5 [官方手動指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)明確表示手機版本未受這次事件影響，只玩手機版的人不需為此事件額外檢查。** 這不涵蓋同時在 PC 版使用過的帳號。用 Linux 或 Steam Deck（Proton）跑 PC 版仍有研究者記錄的風險；官方這份 Windows 指南不是 Proton 的安全確認。本表指令只適用 Windows，其他系統請看 [MotherSphere 的檢查工具說明](https://github.com/MotherSphere/NIKKE-Launcher-Check)。
 
 ## 資料來源
+
+- [11/6 取證修正與清理碼線索（Issue #32 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6686028635)：21:32 發表、21:51（台灣時間）核對；原檔時間、使用者 HKCU 與 SYSTEM hive 須分清；位置尚非已證實惡意用途的新 IOC，Steam／Alt1 COM 解釋為最可能推測
+- [11/6 timeout 時序與構建關聯（Issue #33 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6685803432)：21:20 發表、21:51（台灣時間）核對；單例原檔未獨立核驗，中間構建與原始惡意 `l.js` 仍未知，報告修正尚未完成
 
 - [11/6 COM 常駐機制與處置補充（Issue #32 作者回覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6682943355)：18:51（台灣時間）核對；Steam／Alt1 為單一玩家自述，實機及 DLL 未獨立核驗，不是新投遞路徑
 - [11/6 下載與本體執行區分（Issue #33 作者回覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6682943728)：18:51（台灣時間）核對；timeout 個案未獨立核驗、原始惡意 `l.js` 未取得，v0.5.2 報告修正仍為承諾，最新正式發布頁仍為 v0.5.2
