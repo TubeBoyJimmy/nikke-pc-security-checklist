@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-05 22:42（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-06 11:43（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -34,6 +34,8 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 - **不是每次都中。** 有人開了約 19 次，中了 3 次。所以同樣有開，有人中、有人沒中。
 - **木馬在啟動器開著時能做的事：** 執行任何指令、讀檔、截圖，偷 NIKKE 帳密、各家瀏覽器（Chrome、Edge、Firefox 等）存的密碼和登入 Cookie、SSH 與 API 金鑰、加密錢包資料。部分電腦還被裝上寄生在 Chrome 的常駐 DLL。
 - **紀錄只能證明木馬跑過**，看不出哪些資料被拿走了。
+
+**11/6 研究補充：NAS／分享資料夾與同步檔案也可能在讀取範圍內。** [MotherSphere 11/6 回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6461096)依所分析的 **11/3 構建**指出，任意讀檔能力不限於固定蒐集清單；執行帳號有權限存取的 UNC／NAS 分享，以及本機 OneDrive 等同步資料夾，也可能被讀取。這不是已證明能直接讀取所有雲端資料。**這是研究者對樣本能力的分析，本表未獨立核驗反編譯內容；不能套用到全部構建，也不代表任何特定分享或檔案已被讀取、外傳，更不是 NAS 本身已感染的證據。**
 
 ### 官方說法
 
@@ -99,6 +101,8 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 **11/5 19:22–19:23（台灣時間）網域狀態複核。** MotherSphere 的[最新回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6459160)回報 `insightjs.com` 已遭註冊商暫停解析（registrar hold）。本表隨後直接讀取 [Verisign RDAP](https://rdap.verisign.com/com/v1/domain/insightjs.com)，確認狀態含 `client hold`，名稱伺服器為 `NS1.SUSPENDED-DOMAIN.COM`、`NS2.SUSPENDED-DOMAIN.COM`；同時透過 Google Public DNS 查詢 [`insightjs.com`](https://dns.google/resolve?name=insightjs.com&type=A)、[`www.insightjs.com`](https://dns.google/resolve?name=www.insightjs.com&type=A)、[`analytics.insightjs.com`](https://dns.google/resolve?name=analytics.insightjs.com&type=A) 的 A 紀錄，三者均回覆 `Status: 3`（NXDOMAIN），沒有位址答案。RDAP 的 `last changed` 為 **11/5 10:05:09（台灣時間）**，但不是專門記錄 hold 生效時間的欄位，不能單憑它確定精確停用起點。
 
 **這不是永久失效、其他途徑已排除或感染電腦安全的證明。** [ICANN 對 `clientHold` 的說明](https://www.icann.org/resources/pages/epp-status-codes-2014-06-16-en)指出此狀態會停止網域的 DNS 解析，也可以解除。以上只反映該時段的註冊資料及一個公共解析器的查詢，不涵蓋所有 DNS 快取、`insightjs.org`、直接 IP 或其他投遞／遠控位置，也不會清除既有感染或撤回外洩資料。本次沒有造訪可疑站點、連線已知攻擊 IP 或執行載荷；**既有網域／IP 封鎖、證據保全、隔離及帳號保護建議不變，感染判定與腳本未修改**。
+
+**11/6 痕跡歸屬補充。** [MotherSphere 同日回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6461096)將 `k2f.agent.state` 的寫入歸於 `l.js`，而非 Lua 本體，並稱其收到的此項命中案例都伴隨本體執行。**這是研究者歸屬及個案觀察，原始惡意 `l.js` 尚未取得，本表未獨立核驗；不能據此推導第一階段全部能力。** 既有感染判定與檢查腳本不變。
 
 ### 舊的陰性結果建議重查
 
@@ -203,7 +207,7 @@ MotherSphere 表示，該討論已貼出的 `insight.bundle` 下載網址都指�
 
 ### 1. 隔離電腦
 
-拔網路線或關 Wi-Fi。在右下角系統匣對啟動器按右鍵，選結束。之後不要再用這台電腦登入任何服務。如果是公司電腦，或電腦裡有公司帳號、憑證，先找公司 IT。
+拔網路線或關 Wi-Fi。在右下角系統匣對啟動器按右鍵，選結束。之後不要再用這台電腦登入任何服務。如果是公司電腦，或電腦裡有公司帳號、憑證，先找公司 IT。若受影響電腦可讀取公司分享資料夾或同步文件，也把這些可能暴露的資料範圍交給 IT 評估；不要自行刪除共用資料或把它們上傳公開查核。
 
 ### 2. 用手機或另一台乾淨的電腦處理帳號
 
@@ -212,6 +216,7 @@ MotherSphere 表示，該討論已貼出的 `insight.bundle` 下載網址都指�
 1. **主要信箱**（Google、Outlook 等）：它能拿來重設其他帳號，最優先。
 2. **NIKKE／Level Infinite 帳號**。
 3. **這台電腦瀏覽器存過密碼的帳號**：Discord、Steam、網路銀行等。
+4. **受影響電腦可存取的 NAS／檔案分享與雲端同步帳號**：從乾淨裝置檢視存取、登入紀錄及共用權限；若相關密碼、憑證或工作階段可能暴露，更新或撤銷它們。公司帳號交由 IT 協調，避免擅自中斷共用服務。這是依讀檔能力提出的保守處置，不是已確認這些服務被入侵。
 
 每個帳號都要：
 
@@ -324,6 +329,8 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 **11/5 [官方手動指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)明確表示手機版本未受這次事件影響，只玩手機版的人不需為此事件額外檢查。** 這不涵蓋同時在 PC 版使用過的帳號。用 Linux 或 Steam Deck（Proton）跑 PC 版仍有研究者記錄的風險；官方這份 Windows 指南不是 Proton 的安全確認。本表指令只適用 Windows，其他系統請看 [MotherSphere 的檢查工具說明](https://github.com/MotherSphere/NIKKE-Launcher-Check)。
 
 ## 資料來源
+
+- [MotherSphere 11/6 研究回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6461096)：11/6 11:43（台灣時間）核對；補充 11/3 構建的 UNC／NAS、本機同步檔案讀取範圍及 `k2f.agent.state` 歸屬，未獨立核驗樣本或原始惡意 `l.js`，不代表個案已外洩
 
 - [MotherSphere 假冒「Cleanup Tool」警告](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6459938)：11/5 22:42（台灣時間）核對；研究者警告留言誘導管理員執行遠端腳本，本表未取得或分析腳本，與原事件 IOC 分開
 - [註冊商 hold 研究者回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6459160)、[Verisign RDAP](https://rdap.verisign.com/com/v1/domain/insightjs.com)與 Google Public DNS（[主網域](https://dns.google/resolve?name=insightjs.com&type=A)、[`www`](https://dns.google/resolve?name=www.insightjs.com&type=A)、[`analytics`](https://dns.google/resolve?name=analytics.insightjs.com&type=A)）：11/5 19:22–19:23（台灣時間）獨立唯讀複核；查詢結果可隨時間改變，不代表主機安全
