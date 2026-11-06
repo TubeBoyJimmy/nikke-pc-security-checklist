@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-06 21:51（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-07 07:17（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -96,6 +96,10 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 **11/5 06:41 研究者補充：疑似使用者名稱編碼問題。** MotherSphere 在 [Issue #16 回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/16#issuecomment-6644006257)中，依反編譯內容提出更具體的解釋：`sysinfo` 以 `os.getenv("USERNAME")` 讀取 Windows 系統碼頁的使用者名稱；若位元組不符合 UTF-8，JSON 編碼器就會報錯，再由 `k2f_chan` 回傳 `EIO`。作者因此將原因指向使用者名稱的編碼，而非中文路徑本身。作者另在 [Issue #21 回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/21#issuecomment-6643556395)指出，處理函式捕捉錯誤後仍維持註冊，不會因此自動解除或刪除自身。**這是作者的程式碼分析，本表未獨立核驗反編譯內容、個案完整日誌或實際載荷版本；原始 `l.js` 仍未取得，錯誤後的行為無法確認。** 不能推論所有非 ASCII 使用者名稱都有此效果，更不能當作防護或沒有外洩的證明；既有感染判定與處置不變。
 
+**11/7 07:10（台灣時間）[作者再澄清 #16](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/16#issuecomment-6698091916)：後來的 EIO 或檔案消失，不能推翻先前已載入本體。** 作者依所取得的個案日誌說明順序：下載完成，`l.js` 記錄 `lua downloaded to` 並載入 agent，之後才出現 `k2f_chan registered`；該玩家的 EIO 在註冊標記後約 87 毫秒才發生。因此，不能用該次錯誤或事後找不到 205,135-byte 檔案，推論下載從未完成或本體從未載入。
+
+作者引用另兩例「下載後 207 毫秒」與「agent 啟動後約 4 秒」檔案消失的回報；這些仍是個案觀察。他推測 #16 的檔案較可能由啟動器或 `l.js` 刪除，**刪除者及觸發方式未確認**。官方 ACE 的實際檢查條件仍未公開，不能把玩家猜測的「只因日誌字串觸發」寫成事實。**本表未獨立核驗原始日誌、樣本或刪除過程；既有 `k2f_chan` 感染判定與處置不變，也不由此認定個案資料已外洩。**
+
 **19:20 的複查範圍擴及四個 CDN 節點。** [MotherSphere 晚間更新（固定版本）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5/4d9b02aa437755f376edb96403042c94898bda0a)回報，四個已知 JS 在四個 CDN IP、兩個主機名上均為乾淨內容，也檢查了 gzip 與帶查詢參數的回應。研究者因此建議：重新開啟前，先檢查或保全日誌、快取，再清除 `tbs_cache`，並持續封鎖已知攻擊網域與 IP。**這不是官方全節點安全確認**；未抽查節點、入侵根因仍有疑問，本機舊快取及既有感染也不會自動清除。封鎖目前的網域與 IP，亦不能防止攻擊者改用新位置。
 
 **11/5 19:22–19:23（台灣時間）網域狀態複核。** MotherSphere 的[最新回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6459160)回報 `insightjs.com` 已遭註冊商暫停解析（registrar hold）。本表隨後直接讀取 [Verisign RDAP](https://rdap.verisign.com/com/v1/domain/insightjs.com)，確認狀態含 `client hold`，名稱伺服器為 `NS1.SUSPENDED-DOMAIN.COM`、`NS2.SUSPENDED-DOMAIN.COM`；同時透過 Google Public DNS 查詢 [`insightjs.com`](https://dns.google/resolve?name=insightjs.com&type=A)、[`www.insightjs.com`](https://dns.google/resolve?name=www.insightjs.com&type=A)、[`analytics.insightjs.com`](https://dns.google/resolve?name=analytics.insightjs.com&type=A) 的 A 紀錄，三者均回覆 `Status: 3`（NXDOMAIN），沒有位址答案。RDAP 的 `last changed` 為 **11/5 10:05:09（台灣時間）**，但不是專門記錄 hold 生效時間的欄位，不能單憑它確定精確停用起點。
@@ -147,6 +151,10 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 **11/6 21:20（台灣時間）[作者續覆 #33](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6685803432)：補上單一個案的時間差，仍不是安全結論。** 作者依該玩家日誌（當地 UTC+11）列出：23:35:41.522 加入下載任務、23:35:42.802 發出 GET、23:35:56.518 記錄 timeout，至 23:35:57.625 才完成 205,135 bytes 下載。即加入任務約 15 秒後停止等待，比下載完成早約 1.1 秒；實際下載約 14.8 秒，無法由日誌判定是伺服器或連線緩慢。作者據此及未見 `k2f_chan`，認為本體在**這台電腦最可能未載入**；單次紀錄不足以確定通用 timeout 設定，也不能套用到其他玩家。`l.js` 已在啟動器頁面執行，其原始惡意版本仍未取得，完整能力未明。**本表未獨立核驗原檔，不改變既有感染判定或帳號處置。** 作者同時明說，前述報告修正尚未完成；本次複核最新正式發布仍為 v0.5.2。
 
 作者另表示，玩家提供的 SHA-256 與已公布樣本相同（`cc0ad05bfe85940a6067b3a72c182d3953339129206634141926d5d0b35973ec`），把 ETag `6ae90538-3214f` 與 `6ae9f628-3214f` 對應到相同位元組。這是**研究者依玩家雜湊作出的構建關聯，本表未重新取得樣本驗證**；中間的 `6ae9d408` 尚無公開雜湊，是否相同仍未知。ETag／`Last-Modified` 不能直接等同上線時間；玩家電腦時鐘與同段 HTTP `Date` 也待核對，不能據此擴大或縮短感染期間。
+
+**11/7 07:10（台灣時間）[作者澄清 #33](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6698091445)：擬修正的是「本體是否執行」，不是把整體 Infected 降級。** 對上述僅有下載跡證、未見 `k2f_chan` 的 timeout 個案，作者明確表示，nikke-check 的整體判定仍為 **Infected**，保留報告全部處置，包括建議重灌 Windows；只有「Did the malware run on this computer?」擬改為 **Cannot tell**。理由是無法排除已執行的 `l.js` 在啟動器頁面做過什麼，這是研究者的保守處置立場，**不是新增證據證明第一階段已獨立竊密或該個案已外洩**。
+
+**截至 11/7 07:17（台灣時間）複核，這仍是尚未發布的修正。** 作者表示新版發布後會再通知，最新正式發布仍為 [v0.5.2](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.2)。上游工具的 Infected 與本表「中毒／高風險／有接觸」不是同一套分類，**本次僅更新研究說明，不改本表既有腳本、感染判定或處置步驟，不以此降低風險，也不把作者的個案處置擴套成所有僅有接觸者均已感染。** 此例「下載最終完成但等待逾時」仍須與「下載終結為 0 bytes」分開，不能互相套用；本表未獨立核驗其原檔，原始惡意 `l.js` 仍未取得。
 
 **分享報告前先去識別化，不要上傳完整快取、下載檔或 DLL。** 作者提醒 `tbs_cache` 含 Cookie／Local Storage、`tinyget.mem.log` 含 Cookie／登入票證；偽裝為 tinyget 日誌的下載檔可能是可運作的木馬。需要求助時使用工具的「Hide my info」（`--redact`），再人工檢查最小必要節錄；只提供必要時間、錯誤行或 SHA-256，不公開原檔，也不要為了辨識而開啟或執行可疑檔案。
 
@@ -356,6 +364,9 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 **11/5 [官方手動指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)明確表示手機版本未受這次事件影響，只玩手機版的人不需為此事件額外檢查。** 這不涵蓋同時在 PC 版使用過的帳號。用 Linux 或 Steam Deck（Proton）跑 PC 版仍有研究者記錄的風險；官方這份 Windows 指南不是 Proton 的安全確認。本表指令只適用 Windows，其他系統請看 [MotherSphere 的檢查工具說明](https://github.com/MotherSphere/NIKKE-Launcher-Check)。
 
 ## 資料來源
+
+- [11/7 timeout 判讀與處置澄清（Issue #33 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6698091445)：07:10:50 發表、07:17（台灣時間）核對；Infected 與完整處置不降級，僅本體執行問答擬改 Cannot tell，最新正式版仍 v0.5.2；個案原檔及原始惡意 `l.js` 未獨立核驗
+- [11/7 註冊標記、EIO 與檔案消失澄清（Issue #16 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/16#issuecomment-6698091916)：07:10:52 發表、07:17（台灣時間）核對；作者依個案日誌判斷本體先載入，刪除機制及 ACE 觸發條件仍未確認，本表未獨立核驗原檔或實機
 
 - [11/6 取證修正與清理碼線索（Issue #32 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6686028635)：21:32 發表、21:51（台灣時間）核對；原檔時間、使用者 HKCU 與 SYSTEM hive 須分清；位置尚非已證實惡意用途的新 IOC，Steam／Alt1 COM 解釋為最可能推測
 - [11/6 timeout 時序與構建關聯（Issue #33 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6685803432)：21:20 發表、21:51（台灣時間）核對；單例原檔未獨立核驗，中間構建與原始惡意 `l.js` 仍未知，報告修正尚未完成
