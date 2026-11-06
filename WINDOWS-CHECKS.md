@@ -291,6 +291,27 @@ New-NetFirewallRule -DisplayName 'NIKKE incident - block attacker IPs' -Directio
 Remove-NetFirewallRule -DisplayName 'NIKKE incident - block attacker IPs'
 ```
 
+### 先確認 Windows 防火牆規則是否適用（唯讀）
+
+**規則存在或顯示 `Enabled=True`，不保證流量已被封鎖。** Windows 防火牆還要在目前連線使用的設定檔（profile）啟用，規則也須適用於該 profile，並未被公司政策排除。這同時適用於上方的 IP 規則和下方的 `tbs_browser.exe` 規則。
+
+在 PowerShell 分別查看以下資料；這些命令只讀取設定，不會啟用防火牆、建立規則或發出測試連線。若權限不足或沒有輸出，記為「未能確認」，不要當作封鎖成功；公司電腦交給 IT 查核。
+
+```powershell
+Get-NetConnectionProfile | Format-Table InterfaceAlias, NetworkCategory, IPv4Connectivity, IPv6Connectivity
+Get-NetFirewallProfile -PolicyStore ActiveStore | Format-List Name, Enabled, AllowLocalFirewallRules, DisabledInterfaceAliases
+Get-NetFirewallRule -PolicyStore ActiveStore -TracePolicyStore -DisplayName 'NIKKE incident - block attacker IPs', 'NIKKE - Block tbs_browser outbound' | Format-List DisplayName, Enabled, Direction, Action, Profile, PrimaryStatus, Status, PolicyStoreSourceType, PolicyStoreSource
+```
+
+- 對照目前使用的網路介面：`Public`／`Private` 分別對應同名防火牆 profile，`DomainAuthenticated` 對應 `Domain`；多個介面可能同時使用不同 profile。離線時沒有活動連線也屬查核限制，**不要為了這項檢查重新連網**。
+- 對應 profile 的 `Enabled` 應為 `True`；規則應啟用、方向為 `Outbound`、動作為 `Block`，且 `Profile` 包含該設定檔或為 `Any`。還要核對規則的實際 IP／程式完整路徑，不能只看名稱。
+- `ActiveStore` 用來查看目前合併的政策，不只是本機保存的設定。若本機規則未被政策採用、介面被排除、狀態有異常，或無法解讀結果，請交由 IT／防火牆管理者確認。**符合上述欄位也只是設定查核，不是實際封包阻擋的驗證，更不是電腦安全的證明。**
+- 如果 Windows 安全性顯示第三方防火牆接管，或電腦受公司管理，先確認由哪個產品／政策負責防護，請 IT 或該產品的支援人員核對等效封鎖。**不要逕自啟用 Windows 防火牆、停用第三方產品或更改公司政策。**
+
+**2026-11-06 補充，玩家個案未獨立驗證：** 一名玩家在[公開回報](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6461587)中同時列出已啟用的封鎖規則與關閉的 Windows 防火牆 profiles。這只說明有必要另外核對防護是否生效；本表未檢查該電腦，也未確認關閉原因，**不能歸因於本事件惡意程式、推論其他玩家也如此，或據此判斷是否感染**。不要為了測試規則而重開啟動器或連線攻擊位址。
+
+查核依據（2026-11-06）：Microsoft 的 [Get-NetConnectionProfile](https://learn.microsoft.com/en-us/powershell/module/netconnection/get-netconnectionprofile?view=windowsserver2025-ps)、[Get-NetFirewallProfile](https://learn.microsoft.com/en-us/powershell/module/netsecurity/get-netfirewallprofile?view=windowsserver2025-ps)、[Get-NetFirewallRule](https://learn.microsoft.com/en-us/powershell/module/netsecurity/get-netfirewallrule?view=windowsserver2025-ps) 與[本機規則合併政策說明](https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/rules#local-policy-merge-and-application-rules)。
+
 ## 選用：擋住 tbs_browser.exe 的對外連線
 
 研究者發現，木馬所有的對外通訊都經過啟動器內建的瀏覽器 `tbs_browser.exe`。有玩家回報擋住它之後，被改過的檔案就載不進來；原作者也建議在官方確認修好之前保留這條規則。
