@@ -291,6 +291,17 @@ New-NetFirewallRule -DisplayName 'NIKKE incident - block attacker IPs' -Directio
 Remove-NetFirewallRule -DisplayName 'NIKKE incident - block attacker IPs'
 ```
 
+### 代理與 fake-IP 下的封鎖限制
+
+**2026-11-07 11:39（台灣時間）核對：寫入 hosts 或看到一筆 DNS 回應，都不足以證明目標程式已被擋住。** [MotherSphere 11/7 回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6462677)提醒使用代理時，要另看代理承接的流量與規則；本表未獨立核驗留言中的玩家配置或封包。
+
+- `nslookup` 向指定或預設 DNS 伺服器查詢，不能單獨驗證 Windows hosts 是否作用於目標程式。程式可能把網域交給代理解析，而不是走同一條本機解析路徑。看到 `198.18.x.x` 等 fake-IP 回應，只表示該次查詢可能經過虛擬位址映射，不能當作攻擊伺服器的真實 IP、已連上它或已封鎖的證明；`NXDOMAIN` 也可能來自上游，不能直接歸功於本機規則。
+- **不能概括為 Clash／mihomo 一律忽略 hosts。** mihomo 官方文件將 `use-hosts`（其配置內 hosts）與 `use-system-hosts`（系統 hosts）分開，兩者文件預設均為 `true`；實際仍須看使用版本、啟用設定及解析路徑。文件預設值不是玩家電腦已採用該設定的證據。
+- 先**唯讀**查看實際生效的代理／DNS 配置、規則與既有紀錄，確認上述三個網域、兩個 IP 是否由真正承接流量的封鎖規則處理，以及目標程式是否走該路徑。不熟悉、受公司管理或無法核實時，交給管理者查核；不要任意改公司設定。配置核對仍不等於完整的封包阻擋驗證，更不能反推先前未感染。
+- **不要為此重新連網、重開啟動器，或連線攻擊網域／IP 做測試。** 本節不新增測試指令，也不改動既有腳本與感染判定。
+
+交叉依據：[Microsoft `nslookup` 文件](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/nslookup)（頁面更新 2024-11-01）、[mihomo DNS 文件](https://wiki.metacubex.one/en/config/dns/#use-system-hosts)（頁面標示 2026-07-18）；均於 2026-11-07 核對。研究者留言只核實至 11/7 日期，不以 Gist 頁首活動時間代替留言發表時間。
+
 ### 先確認 Windows 防火牆規則是否適用（唯讀）
 
 **規則存在或顯示 `Enabled=True`，不保證流量已被封鎖。** Windows 防火牆還要在目前連線使用的設定檔（profile）啟用，規則也須適用於該 profile，並未被公司政策排除。這同時適用於上方的 IP 規則和下方的 `tbs_browser.exe` 規則。

@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-07 09:54（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-07 11:39（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -268,6 +268,10 @@ MotherSphere 表示，該討論已貼出的 `insight.bundle` 下載網址都指�
 
 USN 的一般用途亦可參考 [Microsoft 文件](https://learn.microsoft.com/en-us/windows/win32/fileio/change-journals)（2021-01-07 更新；本次核對）：它按磁碟區記錄檔案系統變更。**本表未獨立核驗上述玩家的原始 USN 或樣本，不新增取證腳本或感染判定。** 如需保全，請由有經驗的人員離線處理，輸出到另一顆磁碟；完整 journal 可能包含私人檔名，勿公開上傳。
 
+**11/7 11:39（台灣時間）保全提醒：不要為了查感染日期或找回痕跡，把電腦回復到舊的系統還原點。** [MotherSphere 11/7 回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6462677)提醒還原可能帶回常駐登錄鍵及 DLL；[Microsoft 的 System Restore 說明](https://support.microsoft.com/en-gb/windows/experience/backup-recovery/system-restore?nochrome=true)確認此功能會回復系統檔、登錄設定與已安裝程式。若還原點保有惡意內容，可能重新帶入風險；**這是保守處置建議，不是本表已確認有玩家因此再次感染，也不代表每個還原點都含惡意檔案。**
+
+請維持離線，先保全目前仍留存的日誌、快取、登錄與磁碟變更紀錄，必要時由有經驗的人員處理離線副本。**不要期待回復還原點能找回舊 USN journal**：研究者稱系統還原不會把它回復到舊狀態；上述 Microsoft 頁面未說明 USN，本表未實測此行為，不能保證恢復已覆蓋的紀錄。這次只補充保全提醒，不新增還原／取證指令或感染判定。
+
 登錄 hive、Prefetch、日誌與 DLL 都可能含私人資訊；僅離線保存並交給獲授權的協助者，不上傳公開 repo、議題或樣本服務。這些是研究者提供的保全方向，本表未在玩家電腦驗證。
 
 **最保險的做法是重灌 Windows。** 木馬能執行任何指令，沒人知道攻擊者當時還做了什麼。先備份個人檔案（照片、文件），不要備份舊的程式、整個瀏覽器設定或啟動器快取，再用可信的安裝媒體重灌。
@@ -296,6 +300,8 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 ## 沒中也建議做的預防
 
 **11/6 防火牆提醒：已建立封鎖規則，不代表正在生效。** 請另外[唯讀核對活動網路、適用 profile 與政策](WINDOWS-CHECKS.md#先確認-windows-防火牆規則是否適用唯讀)；第三方或公司防火牆接管時先找管理者，不要逕自更改設定。新增提醒源於一則未獨立驗證的玩家回報，不能歸因於惡意程式，也不改變感染判定。
+
+**11/7 代理／fake-IP 提醒：hosts 已寫入或單次 `nslookup` 結果，都不能單獨證明封鎖生效。** 請依[代理設定與實際解析路徑](WINDOWS-CHECKS.md#代理與-fake-ip-下的封鎖限制)核對；mihomo 的 `use-system-hosts` 可控制系統 hosts 查詢，不能一概說它會忽略 hosts。維持離線，不要重開啟動器或連線攻擊位址來測試。
 
 - 做完[先做這三件事](#先做這三件事)。
 - **封鎖攻擊用的網域和 IP**：網域 `insightjs.com`、`analytics.insightjs.com`、`insightjs.org`，IP `89.127.233.127`、`89.126.250.172`。用 hosts 檔、AdGuard Home 或路由器都可以，[做法在這裡](WINDOWS-CHECKS.md#封鎖攻擊用的網域和-ip)。
@@ -374,6 +380,10 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 **11/5 [官方手動指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)明確表示手機版本未受這次事件影響，只玩手機版的人不需為此事件額外檢查。** 這不涵蓋同時在 PC 版使用過的帳號。用 Linux 或 Steam Deck（Proton）跑 PC 版仍有研究者記錄的風險；官方這份 Windows 指南不是 Proton 的安全確認。本表指令只適用 Windows，其他系統請看 [MotherSphere 的檢查工具說明](https://github.com/MotherSphere/NIKKE-Launcher-Check)。
 
 ## 資料來源
+
+- [11/7 系統還原與代理／fake-IP 處置提醒（MotherSphere 回覆）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6462677)：11/7 11:39（台灣時間）核對；留言僅核實日期，玩家配置及還原結果未獨立驗證，不新增感染證據或判定
+- [Microsoft System Restore 說明](https://support.microsoft.com/en-gb/windows/experience/backup-recovery/system-restore?nochrome=true)：11/7 核對，頁面未列更新日期；支持會回復系統檔、登錄與程式，未說明 USN，不是本事件還原後再次感染的實測
+- [Microsoft `nslookup`](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/nslookup)（2024-11-01 更新）與 [mihomo DNS 設定](https://wiki.metacubex.one/en/config/dns/#use-system-hosts)（頁面標示 2026-07-18）：11/7 核對；文件與預設值不能代替玩家實際解析路徑及封鎖效果驗證
 
 - [11/6 騰訊稱其他遊戲未見受影響（Inven Global 媒體轉述）](https://labs.invenglobal.com/articles/28258/tencent-says-nikke-hack-does-not-apply-to-other-games)：11/7 09:54（台灣時間）核對；英文頁首標示 11/5、內文稱聲明在 11/6，本文按轉述標明聲明日期；尚未找到騰訊原文，調查與其他遊戲架構未獨立核驗，不能當作主機或共用帳號安全證明
 
