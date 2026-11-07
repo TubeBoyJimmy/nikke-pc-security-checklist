@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-07 07:17（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-07 08:37（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -177,6 +177,10 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 先保存快取與報告，不要為了驗證而重新開啟啟動器。**以上限制不會推翻實際日誌中的 `k2f_chan registered`、已確認的惡意 DLL 等具體跡證。** 本次只補充上游修正與證據限制，既有腳本與判定未修改。
 
+**11/7 07:11（台灣時間）[作者澄清更新後防毒命中](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6462582)：先分清舊痕跡與新執行。** 作者指出，已辨識的 Loader code cache 項目只含載入位址與時間，不含腳本；更新後的 `Trojan.Loader.K2F` 命中可能是留存的舊痕跡，**不能僅憑此認定再次感染或補丁失敗，也不能反過來當作電腦安全的證據**。仍須核對完整日誌與其他跡證；先保存證據，不要為了驗證而重開啟動器。
+
+同一回覆分析的 Norton 警示，只表示它回報攔截了該次 Chrome 儲存密碼讀取，**不能證明 Cookie、其他瀏覽器或其他指令也被攔下**，既有改密碼與撤銷工作階段建議不變。這些是研究者對玩家貼文／截圖的解讀，部分路徑被截斷；**本表未獨立核驗原檔、實機或防毒紀錄，不據偵測名稱或檔案日期新增本事件 IOC，也不改感染判定**。
+
 ### 早期投遞腳本的證據界限
 
 **11/5 補充研究限制，並非新增感染案例。** [MotherSphere 原留言](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6456552)指出，該討論中尚無人公開早期負責選擇下載位置、投遞木馬的 `l.js`。[WormW 固定版本分析](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/docs/attack-path.md#0-证据来源与结论边界)取得的 9,145 bytes 副本，是 **11/4 01:30（台灣時間）後被換成的 `/speed` 分析版本，不是早期惡意投遞版**。不能用這份事後副本證明先前腳本沒有其他功能。
@@ -259,6 +263,10 @@ MotherSphere 表示，該討論已貼出的 `insight.bundle` 下載網址都指�
 - **登錄取證須對準受影響的 Windows 使用者。** 作者建議用 `reg save` 保全已知 HKCU CLSID 鍵的 hive 與最後寫入時間，而不是會漏掉這項時間的 `reg export`。若提權時換成另一個管理員帳號，`HKCU` 可能指向錯的人；不能把該帳號的空結果當成受影響帳號陰性。BAM 程序活動則在 **`HKLM\SYSTEM` 的 SYSTEM hive**，不是 HKCU；Prefetch 與 SYSTEM hive 可交給 IT 交叉分析。作者稱 BAM 記錄約保留最近一週，實際可用範圍受系統與保留狀況影響。這些活動痕跡本身不能證明由木馬 `exec` 觸發，缺少痕跡也不能排除執行。
 - **清理程式提到的位置，只能作待核對線索。** 作者指出所分析 agent 的清理碼會刪除 Chrome `Application\PlatformExperienceHelper`（`Program Files`、`Program Files (x86)` 與 `%LOCALAPPDATA%\Google\Chrome\Application` 下）中的 `platform_experience_helper.dll`、`platform_experience_helper.dll.old`、`old-clsid.txt`，以及工作目錄中的 `service_util.dll`；工作目錄「最可能是 NIKKE `Launcher`」仍是推測。這暗示可能有較早版本使用這些名稱，**不是已核實各位置、各同名檔案皆具惡意用途，也不是新增投遞路徑或可直接刪除的 IOC 清單**。若有發現，保留原件資訊與離線副本供分析，不要執行、公開上傳或只憑名稱刪除。
 - **不要把不同工具的涵蓋範圍混在一起。** 作者稱 nikke-check 未查上述清理線索位置；本表既有 PowerShell 已列三類 Chrome `Application\PlatformExperienceHelper` 位置與前三個檔名，但未新增針對 `Launcher\service_util.dll` 的專門檢查。這次僅補充文件，不修改腳本、既有判定或擴大刪除清單；陰性結果不能用來保證所有位置都已查過。
+
+**11/7 07:10（台灣時間）[作者補充 USN 的能力與盲點](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6698090450)。** NTFS USN journal 可留下檔案建立、更名、刪除等變更紀錄，協助查找下載、暫存副本或截圖痕跡；它不是完整的檔案存取或網路傳輸紀錄，**單純讀取、外傳未必留下可辨識的紀錄，沒有命中不能證明沒有讀取或外洩**。須先核對最早保留紀錄是否涵蓋事件時間，舊紀錄可能已被覆蓋；另核對 **NIKKE 實際安裝磁碟**與 `%TEMP%` 所在磁碟，不要只查 `C:` 就認為完整。作者所述 `tinyget` 下載痕跡在遊戲安裝磁碟；個案時序及檔案名稱仍需交叉核對，不能直接推定執行或資料外洩。
+
+USN 的一般用途亦可參考 [Microsoft 文件](https://learn.microsoft.com/en-us/windows/win32/fileio/change-journals)（2021-01-07 更新；本次核對）：它按磁碟區記錄檔案系統變更。**本表未獨立核驗上述玩家的原始 USN 或樣本，不新增取證腳本或感染判定。** 如需保全，請由有經驗的人員離線處理，輸出到另一顆磁碟；完整 journal 可能包含私人檔名，勿公開上傳。
 
 登錄 hive、Prefetch、日誌與 DLL 都可能含私人資訊；僅離線保存並交給獲授權的協助者，不上傳公開 repo、議題或樣本服務。這些是研究者提供的保全方向，本表未在玩家電腦驗證。
 
@@ -364,6 +372,9 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 **11/5 [官方手動指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)明確表示手機版本未受這次事件影響，只玩手機版的人不需為此事件額外檢查。** 這不涵蓋同時在 PC 版使用過的帳號。用 Linux 或 Steam Deck（Proton）跑 PC 版仍有研究者記錄的風險；官方這份 Windows 指南不是 Proton 的安全確認。本表指令只適用 Windows，其他系統請看 [MotherSphere 的檢查工具說明](https://github.com/MotherSphere/NIKKE-Launcher-Check)。
 
 ## 資料來源
+
+- [11/7 更新後 Loader 快取與防毒攔截判讀（MotherSphere 回覆）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6462582)：07:11:18 發表、11/7 08:37（台灣時間）核對；舊痕跡不等於再次感染，單次攔截不涵蓋其他存取；玩家原檔與實機未獨立核驗
+- [11/7 USN 能力、保留範圍與安裝磁碟提醒（Issue #32 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6698090450)：07:10:47 發表、11/7 08:37（台灣時間）核對；變更紀錄不能排除純讀取／外傳，個案原始 journal 未獨立核驗
 
 - [11/7 timeout 判讀與處置澄清（Issue #33 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6698091445)：07:10:50 發表、07:17（台灣時間）核對；Infected 與完整處置不降級，僅本體執行問答擬改 Cannot tell，最新正式版仍 v0.5.2；個案原檔及原始惡意 `l.js` 未獨立核驗
 - [11/7 註冊標記、EIO 與檔案消失澄清（Issue #16 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/16#issuecomment-6698091916)：07:10:52 發表、07:17（台灣時間）核對；作者依個案日誌判斷本體先載入，刪除機制及 ACE 觸發條件仍未確認，本表未獨立核驗原檔或實機
