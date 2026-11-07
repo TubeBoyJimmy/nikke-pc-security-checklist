@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-07 08:37（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-07 09:54（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -354,24 +354,28 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 
 ### 其他 Level Infinite 遊戲也會中嗎？
 
-目前沒有證據。網路上流傳「Level Infinite 旗下 PC 遊戲都要警戒」的清單，以及「王者榮耀、三角洲行動也確認中了」的說法，都沒有附來源。
+目前未見可靠公開證據顯示其他遊戲啟動器遭同一路徑入侵。網路上流傳「Level Infinite 旗下 PC 遊戲都要警戒」的清單，以及「王者榮耀、三角洲行動也確認中了」的說法，本表尚未找到支持來源。
 
-- 研究者 MotherSphere、WormW 和 Inven Global 的報導，都只發現 NIKKE 受影響。Inven 的說法是：目前沒有證據顯示其他遊戲的啟動器被用同樣的方式入侵。
-- 這次的木馬要靠 NIKKE 啟動器內建瀏覽器的本機功能才能下載、執行，研究者確認它只在 NIKKE 啟動器裡運作。
+**11/6 騰訊立場（媒體轉述，11/7 09:54 台灣時間核對）：** [Inven Global 報導](https://labs.invenglobal.com/articles/28258/tencent-says-nikke-hack-does-not-apply-to-other-games)稱，騰訊依截至當時的調查及技術評估，未發現其他旗下遊戲受影響的跡象，並以各遊戲啟動器架構不同為由，表示本次已識別的攻擊路徑不適用於其他遊戲。**本表尚未找到騰訊原始聲明，也未獨立核驗其調查或各遊戲架構；這是媒體轉述的官方立場，不是所有遊戲或玩家電腦都安全的證明。**
+
+- 研究者 MotherSphere、WormW 與先前 Inven Global 報導所確認的初始入侵範圍仍是 NIKKE，不能把發行商或投資關係當成其他遊戲受害的證據。
+- 已知初始投遞流程依賴 NIKKE 啟動器內建瀏覽器的本機功能；這不代表已落地的常駐 DLL 只能在 NIKKE 程序內載入，詳見[常駐範圍提醒](#4-清理電腦)。
 - 那份清單把騰訊投資的工作室和 Level Infinite 發行的遊戲混在一起。例如 Valorant 是 Riot 的遊戲，《鳴潮》是庫洛自己營運。
 
-不過有兩點還不確定：
+仍須保留以下限制：
 
-- 4 個被改的檔案裡，有 2 個放在共用路徑 `/comm/assets/lib/` 底下，研究者提醒同一個儲存空間的其他檔案也可能被改過。攻擊者怎麼拿到 CDN 權限、範圍是不是只有 NIKKE，官方都還沒說明。
-- 木馬會偷 NIKKE 的登入資料。其他遊戲如果也用同一個 Level Infinite 帳號，那些遊戲的帳號一樣有風險，改 NIKKE 密碼時就一起處理了。
+- 4 個被改的檔案裡，有 2 個放在共用路徑 `/comm/assets/lib/` 底下，研究者提醒同一個儲存空間的其他檔案也可能被改過。上述轉述沒有提供攻擊者取得 CDN 權限的根因、完整受查檔案或逐遊戲驗證細節，不能據此獨立排除所有其他投遞路徑。
+- 木馬會偷 NIKKE 的登入資料。其他遊戲如果也用同一個 Level Infinite 帳號，那些遊戲的帳號一樣有風險，改 NIKKE 密碼時就一起處理了。**其他遊戲未見同路徑入侵，不會清除已受感染的電腦，也不能排除其中帳密、Cookie 或其他資料已暴露。**
 
-所以目前不用跟著停玩其他遊戲，但 Level Infinite 帳號的密碼要改，並留意官方後續公告。
+目前沒有依據要求所有玩家僅因共用發行商就停玩其他遊戲；**已受影響的電腦仍須依既有隔離、保全與清理步驟處理，不要用它登入其他遊戲來測試。** 從乾淨裝置保護共用帳號並留意後續公告；本次不改腳本、感染判定或處置步驟。
 
 ### 手機版、Linux／Steam Deck 呢？
 
 **11/5 [官方手動指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)明確表示手機版本未受這次事件影響，只玩手機版的人不需為此事件額外檢查。** 這不涵蓋同時在 PC 版使用過的帳號。用 Linux 或 Steam Deck（Proton）跑 PC 版仍有研究者記錄的風險；官方這份 Windows 指南不是 Proton 的安全確認。本表指令只適用 Windows，其他系統請看 [MotherSphere 的檢查工具說明](https://github.com/MotherSphere/NIKKE-Launcher-Check)。
 
 ## 資料來源
+
+- [11/6 騰訊稱其他遊戲未見受影響（Inven Global 媒體轉述）](https://labs.invenglobal.com/articles/28258/tencent-says-nikke-hack-does-not-apply-to-other-games)：11/7 09:54（台灣時間）核對；英文頁首標示 11/5、內文稱聲明在 11/6，本文按轉述標明聲明日期；尚未找到騰訊原文，調查與其他遊戲架構未獨立核驗，不能當作主機或共用帳號安全證明
 
 - [11/7 更新後 Loader 快取與防毒攔截判讀（MotherSphere 回覆）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6462582)：07:11:18 發表、11/7 08:37（台灣時間）核對；舊痕跡不等於再次感染，單次攔截不涵蓋其他存取；玩家原檔與實機未獨立核驗
 - [11/7 USN 能力、保留範圍與安裝磁碟提醒（Issue #32 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6698090450)：07:10:47 發表、11/7 08:37（台灣時間）核對；變更紀錄不能排除純讀取／外傳，個案原始 journal 未獨立核驗
