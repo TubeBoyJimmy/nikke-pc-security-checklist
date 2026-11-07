@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-07 21:18（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-07 22:16（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -272,6 +272,10 @@ MotherSphere 表示，該討論已貼出的 `insight.bundle` 下載網址都指�
 
 USN 的一般用途亦可參考 [Microsoft 文件](https://learn.microsoft.com/en-us/windows/win32/fileio/change-journals)（2021-01-07 更新；本次核對）：它按磁碟區記錄檔案系統變更。**本表未獨立核驗上述玩家的原始 USN 或樣本，不新增取證腳本或感染判定。** 如需保全，請由有經驗的人員離線處理，輸出到另一顆磁碟；完整 journal 可能包含私人檔名，勿公開上傳。
 
+**11/7 18:55 玩家回報、20:10 作者回覆（台灣時間）：TUN 代理可能影響 SRUM 的程序歸屬。** [單一玩家回報](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6463069)，其 Clash／mihomo TUN 環境把流量計入代理程序；[作者回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6463110)與 [20:51 更新的調查（固定版本）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5/7d09ab9bdc4859749546e34000cd2257635732c4)也將此限定為該台電腦的觀察。因此，**SRUM 沒有 `tbs_browser.exe` 或 `nikke_launcher.exe` 流量，不能單獨排除外傳**；流量低或接近平常，也不能排除少量帳密資料傳出。
+
+**不能推論所有 TUN 配置都如此，也不是個案資料已外洩的證據。** 本表只核對公開回報與作者說明，未獨立核驗原始 SRUM、代理設定或防毒流量資料。請先保全紀錄，由有經驗的人員交叉核對程序歸屬與事件時間；本次不新增取證腳本，不改感染判定或帳號處置。
+
 **11/7 11:39（台灣時間）保全提醒：不要為了查感染日期或找回痕跡，把電腦回復到舊的系統還原點。** [MotherSphere 11/7 回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6462677)提醒還原可能帶回常駐登錄鍵及 DLL；[Microsoft 的 System Restore 說明](https://support.microsoft.com/en-gb/windows/experience/backup-recovery/system-restore?nochrome=true)確認此功能會回復系統檔、登錄設定與已安裝程式。若還原點保有惡意內容，可能重新帶入風險；**這是保守處置建議，不是本表已確認有玩家因此再次感染，也不代表每個還原點都含惡意檔案。**
 
 請維持離線，先保全目前仍留存的日誌、快取、登錄與磁碟變更紀錄，必要時由有經驗的人員處理離線副本。**不要期待回復還原點能找回舊 USN journal**：研究者稱系統還原不會把它回復到舊狀態；上述 Microsoft 頁面未說明 USN，本表未實測此行為，不能保證恢復已覆蓋的紀錄。這次只補充保全提醒，不新增還原／取證指令或感染判定。
@@ -384,6 +388,8 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 **11/5 [官方手動指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)明確表示手機版本未受這次事件影響，只玩手機版的人不需為此事件額外檢查。** 這不涵蓋同時在 PC 版使用過的帳號。用 Linux 或 Steam Deck（Proton）跑 PC 版仍有研究者記錄的風險；官方這份 Windows 指南不是 Proton 的安全確認。本表指令只適用 Windows，其他系統請看 [MotherSphere 的檢查工具說明](https://github.com/MotherSphere/NIKKE-Launcher-Check)。
 
 ## 資料來源
+
+- [11/7 TUN／SRUM 單機流量歸屬回報](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6463069)、[MotherSphere 回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6463110)與 [20:51 調查更新（固定版本）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5/7d09ab9bdc4859749546e34000cd2257635732c4)：18:55、20:10 發表，22:16（台灣時間）經 GitHub gist API 核對；原始 SRUM、代理與防毒資料未獨立核驗，不泛化至所有 TUN，也不認定或排除個案外洩
 
 - [11/7 Windows loaded-DLL 覆蓋率限制（Issue #36 作者回覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/36#issuecomment-6706766912)與 [v0.5.2 原始碼](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.5.2/src/scan.rs#L1142-L1218)：20:10 發表、21:18（台灣時間）核對；程序／模組快照失敗未完整揭露，修正尚未發布，最新正式版仍 v0.5.2；未實測 Windows
 
