@@ -1,12 +1,12 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-07 22:16（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-08 02:36（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
 **9/27 之後在電腦上開過 NIKKE 啟動器的人，不管有沒有中，都建議先做：**
 
-1. **先別更新或重開 PC 版啟動器；先保全日誌、快取與報告，完成安全檢查。** 官方公告的清除功能會在取得同意後刪除相關日誌、DLL 與登錄資料；另有玩家尚未獨立驗證的更新後日誌消失回報，詳見[官方最新措施與保全提醒](#官方說法)。
+1. **先別更新或重開 PC 版啟動器；先保全日誌、快取與報告，完成安全檢查。** 官方公告的清除功能會在取得同意後刪除相關日誌、DLL 與登錄資料；先前「更新後日誌消失」的單一回報已由原玩家更正，詳見[官方最新措施與保全提醒](#官方說法)。
 2. **用手機改 NIKKE（Level Infinite）帳號密碼，並登出所有裝置。** 同一組密碼也用在別處的，一起換掉。
 3. **跑一次[一鍵檢查](WINDOWS-CHECKS.md#一鍵檢查)**，照結果決定下一步。
 
@@ -51,7 +51,7 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 **任何啟動器更新、重開或清除之前，先保全證據。** 若要留存、交給 IT 或釐清個案，請先依[清理前備份](#4-清理電腦)保存日誌、快取與報告，不要等到清除同意視窗才備份。這是本表的證據保全提醒，不是官方已提供備份功能。已隔離的電腦維持離線，**不要只為了觸發掃描或確認有沒有提示而重開啟動器**。官方手動指南同樣要求先斷網、完全關閉遊戲、啟動器與 Chrome，檢查完成前不要重開。
 
-**11/5 17:28 發表、17:29 更新（台灣時間）的[單一玩家回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6654463139)：** 該玩家自述把現有安裝移到舊筆電測試更新後，`debug.log` 被刪除，且沒有顯示結果。**本表未獨立重現；留言未交代確切版本、刪除機制或是否曾同意清除，不能推論所有更新都如此，也不能宣稱 ACE 未經同意刪除。** 這項未驗證回報補強了「更新或重開之前就先備份」的保守建議，沒有改變官方公告所述的同意流程。
+**11/8 02:22（台灣時間）[原玩家更正：`debug.log` 仍存在](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6711269543)。** 同一玩家在 [11/5 17:28 發表、17:29 更新的留言](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6654463139)中，曾稱把安裝移到舊筆電更新後日誌被刪除；現已更正為檔案仍在，並推測先前查看時可能正被鎖定或寫入而未找到。玩家也表示 `tinyget` 日誌未加密。**鎖定／寫入原因只是玩家推測；本表只核對公開留言，未獨立核驗附件原檔、加密狀態或更新與清除行為。** 不應再將原回報作為「更新刪除 `debug.log`」的證據，也不能反向推論所有版本或更新都會保留日誌，或官方清除功能不會刪除相關資料。**更新、重開或清除前先保全證據的建議不變**，官方公告所述的經同意清除流程亦未因此改變。
 
 **官方手動檢查也不是完整排除。** 指南以 `debug.log` 的 `k2f_chan registered` 為主要搜尋項目，並明說沒找到仍不能排除風險。它列出一般版與 `NIKKE_GOOGLE` 日誌位置，但快取清理只明列 `%APPDATA%\nikke_launcher\tbs_cache`；沒有補齊本表下述 CEF、LevelDB、gzip 等掃描限制，也未公開 ACE 的完整檢查清單、版本或雜湊。官方的已知惡意程式移除，不能當作已排除任意指令留下的其他變更，或已撤回外洩資料的證明。
 
@@ -85,6 +85,7 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 | **11/5 07:00 起（官方公告時間）** | 官方公告 PC 客戶端提供本事件掃描與經同意移除功能；本表未實測部署或效果，清除前應先保全證據 |
 | **11/5 10:43** | Issue #11 玩家公開 7 組 `lua downloaded`／`k2f_chan registered` 節錄；完整原始日誌仍未獨立核驗，僅搜尋這兩類字串不能排除其他遠控紀錄或資料外洩 |
 | **11/5 19:22–19:23** | 本表唯讀複核：Verisign RDAP 顯示 `insightjs.com` 為 `client hold`，Google DNS 對主網域、`www` 與 `analytics` 的 A 查詢均回覆 NXDOMAIN；只是當時的網域狀態，不代表永久失效或主機安全 |
+| **11/8 02:22** | Issue #25 原玩家[更正更新後刪除日誌的說法](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6711269543)：`debug.log` 仍在，並稱 `tinyget` 日誌未加密；本表未獨立核驗，不能推論所有版本均保留日誌，保全建議不變 |
 
 **11/4 13:52 本表抽查已有改善，但只是有限觀察。** 當時的檢查只讀取這四個檔案並計算雜湊，沒有執行 JavaScript。`FeedList` 這次收到 5,099 bytes，SHA-256 為 `49b625b30b34dc1fa16edba30bdf63c18b6171a0fc4cf030e21ea4e1263ae18a`，與[已知乾淨版對照](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)相符。回應的 `Date` 是 03:12 UTC，並非本次取得時間，因此不能當作即時源站或全節點驗證。
 
@@ -421,7 +422,7 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 - [Google Play Games PC 版玩家摘要](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6640267816)、[作者回覆（11/5 06:41，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6644005418)與[玩家公開命中節錄（11/5 10:43:31，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6648246141)：查核至 11/5 10:53；已公開 7 組兩類字串節錄，完整原始日誌尚未獨立核驗
 - [v0.5.1 被 Defender 隔離的玩家回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)與[作者更新（11/5 08:14，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6643556806)：作者主張誤報並表示已提交 Microsoft 申訴，議題仍開啟，未見廠商裁定
 - [Temp 誤報確認（11/5 06:41，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/19#issuecomment-6644006713)、[gzip 快取漏看作者回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6457471)
-- [更新後日誌消失的單一玩家回報（11/5 17:28 發表、17:29 更新，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6654463139)：未獨立驗證，版本、刪除機制與同意流程不明
+- [原玩家更正更新後日誌消失的說法（11/8 02:22，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6711269543)：`debug.log` 仍在，鎖定／寫入僅為推測；玩家稱 `tinyget` 日誌未加密，本表未獨立核驗附件或實機。取代 [11/5 17:28 發表、17:29 更新的原回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6654463139)，不代表所有版本或更新均保留日誌
 - [tinyget 日期更正](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6654206829)、[Lua 命令觸發界限](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/17#issuecomment-6654207517)、[兩個 loader-only 個案的限制](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6654208278)：作者均於 11/5 17:14（台灣時間）回覆；本表未獨立核驗個案原檔或反編譯內容
 - [WormW 樣本分析](https://github.com/WormW/nikke_malware_analysis)：攻擊路徑、[11/4 CDN 複查](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)
 - [巴哈姆特整理文（11/4 更新）](https://forum.gamer.com.tw/C.php?bsn=36390&snA=23304)
