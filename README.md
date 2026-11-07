@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-07 11:39（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-07 21:18（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -176,6 +176,10 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 - **gzip HTTP 快取漏看已獲作者實機觀察支持，v0.5.2 仍未修正。** 先前[玩家回報](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5#gistcomment-6457040)解壓後才找到污染檔案；[MotherSphere 隨後回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6457471)，自己的快取也有 gzip 內容，解壓後找到污染的 `images` 與 `aegis-fix`，並承認工具有相同盲點。靜態核對 [v0.5.2 快取掃描（固定版本）](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/07cf01ca36ee4504983bb610d2dd5f5dec9daf76/src/scan.rs#L661-L705)，只有 `.ldb` 會先解析，其餘仍搜尋原始位元組。**這支持漏檢機制，並非已獨立核驗每位玩家的原始快取**；「純文字沒命中」或「已支援 LevelDB 解壓」都不能證明 HTTP 快取乾淨。
 
 先保存快取與報告，不要為了驗證而重新開啟啟動器。**以上限制不會推翻實際日誌中的 `k2f_chan registered`、已確認的惡意 DLL 等具體跡證。** 本次只補充上游修正與證據限制，既有腳本與判定未修改。
+
+**11/7 20:10（台灣時間）作者確認：v0.5.2 的 Windows「已載入 DLL」（loaded-DLL）即時程序檢查可能把讀取失敗呈現為沒有命中。** [Issue #36 回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/36#issuecomment-6706766912)與 [v0.5.2 原始碼](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.5.2/src/scan.rs#L1142-L1218)顯示，取得程序清單失敗會回傳空結果；個別程序的模組快照失敗則直接跳過，未統計或揭露未檢查的程序數。因此，沒有列出載入項目，不能代表所有程序都查過或已排除常駐。**這項限制針對 loaded-DLL 檢查，不代表日誌、快取或其他檢查全部失效，也不推翻已找到的具體跡證。**
+
+**截至 11/7 21:18（台灣時間）複核，最新正式版仍為 [v0.5.2](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.2)，上述修正尚未發布。** 作者表示下一版將列出無法檢查的程序數，程序清單讀取失敗時標示該項未完成；新版正等待 Windows 簽章安排。本表僅核對作者說明與原始碼，未實測 Windows；既有腳本、感染判定與處置步驟不變。
 
 **11/7 07:11（台灣時間）[作者澄清更新後防毒命中](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6462582)：先分清舊痕跡與新執行。** 作者指出，已辨識的 Loader code cache 項目只含載入位址與時間，不含腳本；更新後的 `Trojan.Loader.K2F` 命中可能是留存的舊痕跡，**不能僅憑此認定再次感染或補丁失敗，也不能反過來當作電腦安全的證據**。仍須核對完整日誌與其他跡證；先保存證據，不要為了驗證而重開啟動器。
 
@@ -380,6 +384,8 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 **11/5 [官方手動指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)明確表示手機版本未受這次事件影響，只玩手機版的人不需為此事件額外檢查。** 這不涵蓋同時在 PC 版使用過的帳號。用 Linux 或 Steam Deck（Proton）跑 PC 版仍有研究者記錄的風險；官方這份 Windows 指南不是 Proton 的安全確認。本表指令只適用 Windows，其他系統請看 [MotherSphere 的檢查工具說明](https://github.com/MotherSphere/NIKKE-Launcher-Check)。
 
 ## 資料來源
+
+- [11/7 Windows loaded-DLL 覆蓋率限制（Issue #36 作者回覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/36#issuecomment-6706766912)與 [v0.5.2 原始碼](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.5.2/src/scan.rs#L1142-L1218)：20:10 發表、21:18（台灣時間）核對；程序／模組快照失敗未完整揭露，修正尚未發布，最新正式版仍 v0.5.2；未實測 Windows
 
 - [11/7 系統還原與代理／fake-IP 處置提醒（MotherSphere 回覆）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6462677)：11/7 11:39（台灣時間）核對；留言僅核實日期，玩家配置及還原結果未獨立驗證，不新增感染證據或判定
 - [Microsoft System Restore 說明](https://support.microsoft.com/en-gb/windows/experience/backup-recovery/system-restore?nochrome=true)：11/7 核對，頁面未列更新日期；支持會回復系統檔、登錄與程式，未說明 USN，不是本事件還原後再次感染的實測
