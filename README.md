@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-08 08:23（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-09 02:36（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -289,6 +289,10 @@ USN 的一般用途亦可參考 [Microsoft 文件](https://learn.microsoft.com/e
 
 **不能推論所有 TUN 配置都如此，也不是個案資料已外洩的證據。** 本表只核對公開回報與作者說明，未獨立核驗原始 SRUM、代理設定或防毒流量資料。請先保全紀錄，由有經驗的人員交叉核對程序歸屬與事件時間；本次不新增取證腳本，不改感染判定或帳號處置。
 
+**11/8 18:00（台灣時間）另一則單機回報：多個有接收流量的程序，送出計數仍為零。** [玩家自述](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6464047)，其啟動器 SRUM 紀錄均在有線乙太網路介面，接收量仍按程序記錄，因此認為不同於前述 TUN 代理歸屬情況；同一時段 58 筆有接收的紀錄中，46 筆顯示送出為零，且多個正常運作須送出請求的程式也如此。玩家表示成因未知。**本表只核對公開自述，未獨立核驗原始 SRUM、網路設定或工具解析；不能泛化為所有有線／非 TUN 電腦都會漏記，也不能認定該台已外洩。**
+
+**判讀零值前，先交叉核對同時段其他程序的計數完整性。** 保全現有紀錄後，可由有經驗的人員查看同一時段有接收、且正常運作須送出請求的其他程序，是否也大量顯示送出為零；有這種異常時，不能用該機送出欄位的零值排除外傳。沒有觀察到這種異常，也不代表單一程序零值足以排除外傳。**這是本表依回報補充的判讀提醒，不是已確認的 Windows／SRUM 缺陷；感染判定與帳號處置不變。** 不要為了補測而重新連網或重開啟動器。
+
 **11/7 11:39（台灣時間）保全提醒：不要為了查感染日期或找回痕跡，把電腦回復到舊的系統還原點。** [MotherSphere 11/7 回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6462677)提醒還原可能帶回常駐登錄鍵及 DLL；[Microsoft 的 System Restore 說明](https://support.microsoft.com/en-gb/windows/experience/backup-recovery/system-restore?nochrome=true)確認此功能會回復系統檔、登錄設定與已安裝程式。若還原點保有惡意內容，可能重新帶入風險；**這是保守處置建議，不是本表已確認有玩家因此再次感染，也不代表每個還原點都含惡意檔案。**
 
 請維持離線，先保全目前仍留存的日誌、快取、登錄與磁碟變更紀錄，必要時由有經驗的人員處理離線副本。**不要期待回復還原點能找回舊 USN journal**：研究者稱系統還原不會把它回復到舊狀態；上述 Microsoft 頁面未說明 USN，本表未實測此行為，不能保證恢復已覆蓋的紀錄。這次只補充保全提醒，不新增還原／取證指令或感染判定。
@@ -412,6 +416,8 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 
 - [v0.6.0 正式發布](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.6.0)、[完整版本差異](https://github.com/MotherSphere/NIKKE-Launcher-Check/compare/v0.5.2...v0.6.0)與 [ETag 識別提交](https://github.com/MotherSphere/NIKKE-Launcher-Check/commit/67ae59bc719fd9ba37361fce0c4a58a7a568c697)：11/8 08:07:46（台灣時間）發布、08:23 核對；新增 ETag 不等於新雜湊或不同二進位，三項既有修正未納入，未執行工具或實測 Windows
 - [11/8 DLL 初步分析](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6714734076)與[關鍵分支反組譯續覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6714845858)：07:56:58、08:08:07（台灣時間）發表，08:23 核對；僅適用指定 250,368-byte 樣本，本表未獨立核驗樣本，不否定 RAT 或泛化所有 DLL
+
+- [11/8 SRUM 多程序送出零值的單機回報](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6464047)：11/8 18:00（台灣時間）發表，11/9 02:36 經 GitHub gist API 核對；有線、非前述 TUN 歸屬情況為玩家自述，成因未知，原始 SRUM／設定／工具解析未獨立核驗，不泛化為所有環境的缺陷，也不認定或排除個案外洩
 
 - [11/7 TUN／SRUM 單機流量歸屬回報](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6463069)、[MotherSphere 回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6463110)與 [20:51 調查更新（固定版本）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5/7d09ab9bdc4859749546e34000cd2257635732c4)：18:55、20:10 發表，22:16（台灣時間）經 GitHub gist API 核對；原始 SRUM、代理與防毒資料未獨立核驗，不泛化至所有 TUN，也不認定或排除個案外洩
 
