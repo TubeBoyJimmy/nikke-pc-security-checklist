@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-08 02:36（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-08 08:23（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -14,7 +14,7 @@
 
 **這是研究者指出的另一項可疑清除工具風險，與原 NIKKE 攻擊指標分開。** 本表於 **11/5 22:42（台灣時間）**核對警告，未取得或分析該腳本，不能確認其具體行為或受害範圍，也未把留言聲稱的檔名、IP、登錄項目或排程工作加入感染判定。若已執行，研究者建議把電腦視為遭該腳本入侵：先斷網、用另一台乾淨裝置保護帳號，並重裝 Windows。本表原有 NIKKE 檢查不能排除這個遠端腳本造成的風險。
 
-**11/5 檢查工具更新：先前沒找到痕跡的人，請看[重新檢查建議](#舊的陰性結果建議重查)。** 上游已發布 v0.5.2，修正部分 Temp 誤報並補強 Google Play Games 版辨識；**gzip HTTP 快取仍可能漏看**，更新工具後沒找到痕跡也不能保證安全。
+**11/8 檢查工具更新：先前沒找到痕跡的人，請看[重新檢查建議](#舊的陰性結果建議重查)。** 上游已正式發布 [v0.6.0](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.6.0)，新增一個 payload ETag 的識別；**gzip HTTP 快取、loaded-DLL 覆蓋率與 timeout 執行問答的既有問題仍未修正**，更新工具後沒找到痕跡也不能保證安全。
 
 > 為什麼沒中也要改密碼？木馬只在「部分啟動」時才送來，而且會刪掉自己的暫存檔，檢查不出來不代表 100% 沒事，而改密碼的成本很低。研究者 MotherSphere 建議 10/23 之後開過啟動器就改；巴哈整理文更保守，從 9/27 算起。這份表採用 9/27。
 
@@ -86,6 +86,8 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 | **11/5 10:43** | Issue #11 玩家公開 7 組 `lua downloaded`／`k2f_chan registered` 節錄；完整原始日誌仍未獨立核驗，僅搜尋這兩類字串不能排除其他遠控紀錄或資料外洩 |
 | **11/5 19:22–19:23** | 本表唯讀複核：Verisign RDAP 顯示 `insightjs.com` 為 `client hold`，Google DNS 對主網域、`www` 與 `analytics` 的 A 查詢均回覆 NXDOMAIN；只是當時的網域狀態，不代表永久失效或主機安全 |
 | **11/8 02:22** | Issue #25 原玩家[更正更新後刪除日誌的說法](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6711269543)：`debug.log` 仍在，並稱 `tinyget` 日誌未加密；本表未獨立核驗，不能推論所有版本均保留日誌，保全建議不變 |
+| **11/8 08:07:46** | MotherSphere 正式發布 [v0.6.0](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.6.0)，新增 `6ae4f146-3214f` ETag 識別；gzip、loaded-DLL 覆蓋率及 timeout 問答修正仍未納入 |
+| **11/8 08:08** | [作者對單一 250,368-byte DLL 的反組譯補充](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6714845858)：非 `chrome.exe` 或未載入 `chrome.dll` 就返回，`/px/` 不讀回應本文；不能泛化所有變種或否定啟動器 RAT 風險 |
 
 **11/4 13:52 本表抽查已有改善，但只是有限觀察。** 當時的檢查只讀取這四個檔案並計算雜湊，沒有執行 JavaScript。`FeedList` 這次收到 5,099 bytes，SHA-256 為 `49b625b30b34dc1fa16edba30bdf63c18b6171a0fc4cf030e21ea4e1263ae18a`，與[已知乾淨版對照](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)相符。回應的 `Date` 是 03:12 UTC，並非本次取得時間，因此不能當作即時源站或全節點驗證。
 
@@ -113,15 +115,15 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 **11/4 19:57（台灣時間），MotherSphere 發布 [NIKKE-Launcher-Check v0.4.1](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.4.1)。** [這次修正](https://github.com/MotherSphere/NIKKE-Launcher-Check/commit/8a823d59e4d32358173197e64ea0b209650feb32)指出，啟動器 Local Storage 的 LevelDB 會把紀錄移到 `.ldb` 表，資料可能經 Snappy 壓縮，鍵名也可能共用前綴；直接搜尋原始文字可能漏掉 `k2f.agent.state`。新版會先解壓並還原完整鍵名再搜尋。
 
-**本表的一鍵 PowerShell 檢查尚未加入這項解析。** 若先前只用本表指令、純文字搜尋，或 MotherSphere 舊版工具，得到「沒找到已知痕跡」或只有接觸、未見木馬的結果，建議用已正式發布的 [v0.5.2](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.2) 重新檢查，尤其是 `debug.log` 已遺失或被覆寫時：
+**本表的一鍵 PowerShell 檢查尚未加入這項解析。** 若先前只用本表指令、純文字搜尋，或 MotherSphere 舊版工具，得到「沒找到已知痕跡」或只有接觸、未見木馬的結果，建議用已正式發布的 [v0.6.0](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.6.0) 重新檢查，尤其是 `debug.log` 已遺失或被覆寫時：
 
-**11/5 05:16（台灣時間）新增防毒警示回報。** 一名玩家在[上游 Issue #22](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)回報，執行 v0.5.1 掃描時，Windows Defender 立即隔離檢查工具，偵測名稱為 `Trojan:Win32/Bearfoos.A!ml`。回報未附被隔離檔案的 SHA-256、Defender 引擎／安全性情報版本或完整偵測紀錄。作者於 **11/5 06:17** 回覆，並在 **11/5 08:14** [更新同一則留言](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6643556806)，主張這是誤報，**表示已將 v0.5.1 提交 Microsoft 申訴**，並把還原檔案的建議放在 Microsoft 確認排除偵測、更新 Defender 之後。這是作者的說明與申訴狀態，**議題仍開啟，未見 Microsoft 裁定；不能寫成已證實誤報、已解決，也不能據此斷言工具惡意。** v0.5.2 的發布亦不等於這個防毒問題已排除。
+**11/5 05:16（台灣時間）新增防毒警示回報。** 一名玩家在[上游 Issue #22](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)回報，執行 v0.5.1 掃描時，Windows Defender 立即隔離檢查工具，偵測名稱為 `Trojan:Win32/Bearfoos.A!ml`。回報未附被隔離檔案的 SHA-256、Defender 引擎／安全性情報版本或完整偵測紀錄。作者於 **11/5 06:17** 回覆，並在 **11/5 08:14** [更新同一則留言](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6643556806)，主張這是誤報，**表示已將 v0.5.1 提交 Microsoft 申訴**，並把還原檔案的建議放在 Microsoft 確認排除偵測、更新 Defender 之後。這是作者的說明與申訴狀態，**議題仍開啟，未見 Microsoft 裁定；不能寫成已證實誤報、已解決，也不能據此斷言工具惡意。** v0.6.0 的發布亦不等於這個防毒問題已排除。
 
 **若防毒攔截或隔離檢查工具，先停止使用並保持隔離，不要為了執行它而關閉防毒、加入排除或還原放行。** 保留偵測名稱、時間與報告，等待工具作者或防毒廠商核實；版本與雜湊核對不能取代安全審核。
 
 1. 先保留現有日誌、快取與舊報告，**不要為了重查而開啟 NIKKE 啟動器，也不要先刪 `tbs_cache`**。
-2. 從 [v0.5.2 發布頁](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.2)取得 Windows 版 `nikke-check-windows-x86_64.exe` 和**同版本**的 `SHA256SUMS.txt`，依[下載核對說明](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.5.2/docs/usage.md#check-the-download)比對 SHA-256。這是未簽章的第三方檢查工具，不是遊戲官方程式；雜湊相符只確認下載一致，不等於完整安全審核。
-3. 已隔離的電腦保持離線，由乾淨裝置下載後帶入。檢查工具可離線掃描，視窗上方應顯示 0.5.2。新版支援繁體中文；下列按鈕以英文名稱對照。先選「Scan this computer」；未找到木馬跡證時依提示做「Full scan」。特殊安裝位置或未涵蓋的資料夾，再用「Scan a folder...」，並核對「Details」中的掃描位置與讀取失敗項目。[使用說明](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.5.2/docs/usage.md#the-window)
+2. 從 [v0.6.0 發布頁](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.6.0)取得 Windows 版 `nikke-check-windows-x86_64.exe` 和**同版本**的 `SHA256SUMS.txt`，依[下載核對說明](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.6.0/docs/usage.md#check-the-download)比對 SHA-256。這是未簽章的第三方檢查工具，不是遊戲官方程式；雜湊相符只確認下載一致，不等於完整安全審核。
+3. 已隔離的電腦保持離線，由乾淨裝置下載後帶入。檢查工具可離線掃描，視窗上方應顯示 0.6.0。新版支援繁體中文；下列按鈕以英文名稱對照。先選「Scan this computer」；未找到木馬跡證時依提示做「Full scan」。特殊安裝位置或未涵蓋的資料夾，再用「Scan a folder...」，並核對「Details」中的掃描位置與讀取失敗項目。[使用說明](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.6.0/docs/usage.md#the-window)
 
 **新版沒有找到痕跡，也不能保證沒感染或沒外洩。** 已刪除的紀錄不會因更新工具而恢復，掃描仍受位置、檔案可讀性等限制。先保存新報告，再依既有處置步驟處理。
 
@@ -129,7 +131,7 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 **11/4 21:39（台灣時間），MotherSphere 正式發布 [v0.5.1](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.1)。** 先前 21:02 的[原始碼更新](https://github.com/MotherSphere/NIKKE-Launcher-Check/commit/570d8a0cd42f00d2c11a507f2cb494c2d137cb4d)已包含在這個正式版，**不必再等待發布**。[版本紀錄（固定版本）](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/0e09c7c422c48103856a933a3b910b51ba7b83da/CHANGELOG.md)列出：
 
-- **擴大檢查範圍：** 新增啟動器登入視窗使用的 `%LOCALAPPDATA%\CEF\User Data`，搜尋相同的木馬跡證，也解析壓縮的 LevelDB。其他 CEF 程式可能共用這個位置，**資料夾存在本身不代表感染，不要整個直接刪除**。v0.4.1 未包含此範圍，本表腳本也仍未加入這項專門檢查；先保留可能相關的資料，再用目前的 v0.5.2 補查。
+- **擴大檢查範圍：** 新增啟動器登入視窗使用的 `%LOCALAPPDATA%\CEF\User Data`，搜尋相同的木馬跡證，也解析壓縮的 LevelDB。其他 CEF 程式可能共用這個位置，**資料夾存在本身不代表感染，不要整個直接刪除**。v0.4.1 未包含此範圍，本表腳本也仍未加入這項專門檢查；先保留可能相關的資料，再用目前的 v0.6.0 補查。
 - **修正上游工具誤報：** 不再只因 NIKKE 啟動器正在執行就列為感染，而是同次掃描另有木馬跡證時才把執行中的啟動器列為 critical。若舊工具的感染結果只有這個理由，先核對報告的「Details」；**這項修正不會推翻已找到的實際木馬跡證**，也不是重新開啟啟動器就安全的保證。
 - **補上 Google Play Games 版資料夾：** v0.5.1 新增 `%APPDATA%\nikke_launcher_google` 的檢查。使用這個版本的玩家，重查時請核對報告是否涵蓋該資料夾；這是掃描範圍補充，不是新增感染規模的證據。
 
@@ -145,19 +147,29 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 本次只更新上游狀態與使用說明，**本表腳本與感染判定未修改**。v0.5.2 仍未補上 gzip HTTP 快取解壓檢查，不能把版本更新當成所有漏檢都已修復。
 
-**11/6 18:51（台灣時間）工具判讀補充：下載或檔案存在，不等於 Lua 木馬本體已執行。** 作者在 [Issue #33 回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6682943728)（18:40 發表）承認，v0.5.2 只有下載及檔案跡證時，仍會把「Did the malware run on this computer?」回答為 Yes，這個執行結論過強；並表示將改為「Cannot tell」、補列 `startup failed: lua download timed out`。**截至本次查核，最新正式版仍是 v0.5.2，不能把修正承諾當作已發布。** 看上游報告時應核對 Details 的具體證據，不要只憑 Infected 或 Yes 標題認定本體執行；本表既有腳本與感染判定不變。
+**11/6 18:51（台灣時間）工具判讀補充：下載或檔案存在，不等於 Lua 木馬本體已執行。** 作者在 [Issue #33 回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6682943728)（18:40 發表）承認，v0.5.2 只有下載及檔案跡證時，仍會把「Did the malware run on this computer?」回答為 Yes，這個執行結論過強；並表示將改為「Cannot tell」、補列 `startup failed: lua download timed out`。**11/8 已發布 v0.6.0，但尚未納入這項問答修正，不能把修正承諾當作已發布。** 看上游報告時應核對 Details 的具體證據，不要只憑 Infected 或 Yes 標題認定本體執行；本表既有腳本與感染判定不變。
 
 **該 timeout 個案仍未獨立核驗，不能當作安全證明。** 作者依玩家提供內容推測該次下載完成時，第一階段已停止等待；這不同於已出現 `k2f_chan` 後才啟動失敗，也不同於下載始終為 0 bytes。應核對同次下載結果、時間順序與完整 `debug.log`，搜尋正確字串 `k2f_chan`（不是 `k2f_registered`）。**缺少標記的解讀受日誌完整性、刪除／覆寫與掃描範圍限制；單憑 timeout、缺標記、檔案留下或沒有 DLL，都不能排除其他次執行或資料外洩。** 原始惡意 `l.js` 仍未取得，第一階段完整能力未明；保留證據與帳號防護，不以這則個案進一步降級。
 
-**11/6 21:20（台灣時間）[作者續覆 #33](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6685803432)：補上單一個案的時間差，仍不是安全結論。** 作者依該玩家日誌（當地 UTC+11）列出：23:35:41.522 加入下載任務、23:35:42.802 發出 GET、23:35:56.518 記錄 timeout，至 23:35:57.625 才完成 205,135 bytes 下載。即加入任務約 15 秒後停止等待，比下載完成早約 1.1 秒；實際下載約 14.8 秒，無法由日誌判定是伺服器或連線緩慢。作者據此及未見 `k2f_chan`，認為本體在**這台電腦最可能未載入**；單次紀錄不足以確定通用 timeout 設定，也不能套用到其他玩家。`l.js` 已在啟動器頁面執行，其原始惡意版本仍未取得，完整能力未明。**本表未獨立核驗原檔，不改變既有感染判定或帳號處置。** 作者同時明說，前述報告修正尚未完成；本次複核最新正式發布仍為 v0.5.2。
+**11/6 21:20（台灣時間）[作者續覆 #33](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6685803432)：補上單一個案的時間差，仍不是安全結論。** 作者依該玩家日誌（當地 UTC+11）列出：23:35:41.522 加入下載任務、23:35:42.802 發出 GET、23:35:56.518 記錄 timeout，至 23:35:57.625 才完成 205,135 bytes 下載。即加入任務約 15 秒後停止等待，比下載完成早約 1.1 秒；實際下載約 14.8 秒，無法由日誌判定是伺服器或連線緩慢。作者據此及未見 `k2f_chan`，認為本體在**這台電腦最可能未載入**；單次紀錄不足以確定通用 timeout 設定，也不能套用到其他玩家。`l.js` 已在啟動器頁面執行，其原始惡意版本仍未取得，完整能力未明。**本表未獨立核驗原檔，不改變既有感染判定或帳號處置。** 作者當時明說，前述報告修正尚未完成；11/8 的 v0.6.0 仍未納入，詳見下方版本說明。
 
 作者另表示，玩家提供的 SHA-256 與已公布樣本相同（`cc0ad05bfe85940a6067b3a72c182d3953339129206634141926d5d0b35973ec`），把 ETag `6ae90538-3214f` 與 `6ae9f628-3214f` 對應到相同位元組。這是**研究者依玩家雜湊作出的構建關聯，本表未重新取得樣本驗證**；中間的 `6ae9d408` 尚無公開雜湊，是否相同仍未知。ETag／`Last-Modified` 不能直接等同上線時間；玩家電腦時鐘與同段 HTTP `Date` 也待核對，不能據此擴大或縮短感染期間。
 
 **11/7 07:10（台灣時間）[作者澄清 #33](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6698091445)：擬修正的是「本體是否執行」，不是把整體 Infected 降級。** 對上述僅有下載跡證、未見 `k2f_chan` 的 timeout 個案，作者明確表示，nikke-check 的整體判定仍為 **Infected**，保留報告全部處置，包括建議重灌 Windows；只有「Did the malware run on this computer?」擬改為 **Cannot tell**。理由是無法排除已執行的 `l.js` 在啟動器頁面做過什麼，這是研究者的保守處置立場，**不是新增證據證明第一階段已獨立竊密或該個案已外洩**。
 
-**截至 11/7 07:17（台灣時間）複核，這仍是尚未發布的修正。** 作者表示新版發布後會再通知，最新正式發布仍為 [v0.5.2](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.2)。上游工具的 Infected 與本表「中毒／高風險／有接觸」不是同一套分類，**本次僅更新研究說明，不改本表既有腳本、感染判定或處置步驟，不以此降低風險，也不把作者的個案處置擴套成所有僅有接觸者均已感染。** 此例「下載最終完成但等待逾時」仍須與「下載終結為 0 bytes」分開，不能互相套用；本表未獨立核驗其原檔，原始惡意 `l.js` 仍未取得。
+**截至 11/7 07:17（台灣時間）複核，這仍是尚未發布的修正。** 作者當時表示新版發布後會再通知，當時最新正式發布仍為 [v0.5.2](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.2)。上游工具的 Infected 與本表「中毒／高風險／有接觸」不是同一套分類，**本次僅更新研究說明，不改本表既有腳本、感染判定或處置步驟，不以此降低風險，也不把作者的個案處置擴套成所有僅有接觸者均已感染。** 此例「下載最終完成但等待逾時」仍須與「下載終結為 0 bytes」分開，不能互相套用；本表未獨立核驗其原檔，原始惡意 `l.js` 仍未取得。
 
 **分享報告前先去識別化，不要上傳完整快取、下載檔或 DLL。** 作者提醒 `tbs_cache` 含 Cookie／Local Storage、`tinyget.mem.log` 含 Cookie／登入票證；偽裝為 tinyget 日誌的下載檔可能是可運作的木馬。需要求助時使用工具的「Hide my info」（`--redact`），再人工檢查最小必要節錄；只提供必要時間、錯誤行或 SHA-256，不公開原檔，也不要為了辨識而開啟或執行可疑檔案。
+
+### v0.6.0：新增 ETag 識別，既有盲點仍在
+
+**11/8 08:07:46（台灣時間；00:07:46 UTC），MotherSphere 正式發布 [v0.6.0](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.6.0)。** 本表於 **11/8 08:23（台灣時間）**核對發布頁、版本差異與原始碼；這是第三方檢查工具更新，不是 NIKKE 官方安全認證，本表未執行工具或實測 Windows。
+
+- **新增 ETag `6ae4f146-3214f` 的已知識別。** [上游提交](https://github.com/MotherSphere/NIKKE-Launcher-Check/commit/67ae59bc719fd9ba37361fce0c4a58a7a568c697)將已列出的 ETag 從 7 個增至 8 個；其時間欄位對應 10/30 19:34:30 UTC（台灣時間 10/31 03:34:30），大小欄位為 205,135 bytes。**ETag 不是內容雜湊，8 個 ETag 不代表 8 份不同二進位**；上游並註明 `6ae90538` 與 `6ae9f628` 對應相同位元組。本表未取得新增 ETag 的樣本驗證，時間欄位不能直接當成實際上線或個案執行時間，不據此改動感染期間。
+- **gzip 與 loaded-DLL 覆蓋率仍未修。** [v0.5.2 至 v0.6.0 的完整差異](https://github.com/MotherSphere/NIKKE-Launcher-Check/compare/v0.5.2...v0.6.0)未修改 `src/scan.rs`；[快取掃描](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/9f7af18d9222092d58efce36c844ed54c5f4b906/src/scan.rs#L661-L705)仍未解壓 gzip HTTP 快取，[loaded-DLL 檢查](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/9f7af18d9222092d58efce36c844ed54c5f4b906/src/scan.rs#L1142-L1218)仍未完整揭露程序／模組讀取失敗。
+- **timeout 個案的「本體是否執行」問答仍未修。** v0.6.0 的 `src/guide.rs` 只改了註解；[問答邏輯](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/9f7af18d9222092d58efce36c844ed54c5f4b906/src/guide.rs#L87-L117)仍以包含下載及檔案跡證的 [`AGENT_SIGNS`](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/9f7af18d9222092d58efce36c844ed54c5f4b906/src/scan.rs#L93-L107)回答 Yes。作者對 #33 的修正承諾尚未落入這個正式版；應看 Details 的具體跡證，不單憑 Yes 判定本體已執行，也不據此降低原有處置。
+
+**本次只更新公開說明及目前版本連結，本表腳本、感染判定與處置步驟不變。** v0.6.0 另補充防毒警示及 SignPath 簽章申請說明，不能把申請中、正式發布或雜湊相符寫成已獲安全認證；防毒攔截時仍依前述保守方式處理。
 
 ### Google Play Games 版：已公開命中節錄，完整原檔未核驗
 
@@ -174,13 +186,13 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 ### 11/5 檢查限制與誤報修正
 
 - **舊版 Temp 目錄誤報已獲作者確認。** [Issue #19 作者回覆（11/5 06:41）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/19#issuecomment-6644006713)確認，兩位玩家的舊 `k2f` 開頭目錄是因名稱被誤列 critical；v0.5.2 已改成只比對 `k2f-`、`k2f_` 開頭的一般檔案，目錄不再算。**本表腳本尚未同步修正**，仍可能命中這類項目。若舊報告只有這一項，先保留資料、核對完整報告，再用新版重查；不要只憑模糊名稱認定感染，也不能因這項誤報被排除就證明整台電腦安全。實際惡意檔案、`k2f_chan` 等其他跡證不受此修正影響。
-- **gzip HTTP 快取漏看已獲作者實機觀察支持，v0.5.2 仍未修正。** 先前[玩家回報](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5#gistcomment-6457040)解壓後才找到污染檔案；[MotherSphere 隨後回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6457471)，自己的快取也有 gzip 內容，解壓後找到污染的 `images` 與 `aegis-fix`，並承認工具有相同盲點。靜態核對 [v0.5.2 快取掃描（固定版本）](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/07cf01ca36ee4504983bb610d2dd5f5dec9daf76/src/scan.rs#L661-L705)，只有 `.ldb` 會先解析，其餘仍搜尋原始位元組。**這支持漏檢機制，並非已獨立核驗每位玩家的原始快取**；「純文字沒命中」或「已支援 LevelDB 解壓」都不能證明 HTTP 快取乾淨。
+- **gzip HTTP 快取漏看已獲作者實機觀察支持，截至 v0.6.0 仍未修正。** 先前[玩家回報](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5#gistcomment-6457040)解壓後才找到污染檔案；[MotherSphere 隨後回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6457471)，自己的快取也有 gzip 內容，解壓後找到污染的 `images` 與 `aegis-fix`，並承認工具有相同盲點。靜態核對 [v0.6.0 快取掃描（固定版本）](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/9f7af18d9222092d58efce36c844ed54c5f4b906/src/scan.rs#L661-L705)，只有 `.ldb` 會先解析，其餘仍搜尋原始位元組。**這支持漏檢機制，並非已獨立核驗每位玩家的原始快取**；「純文字沒命中」或「已支援 LevelDB 解壓」都不能證明 HTTP 快取乾淨。
 
 先保存快取與報告，不要為了驗證而重新開啟啟動器。**以上限制不會推翻實際日誌中的 `k2f_chan registered`、已確認的惡意 DLL 等具體跡證。** 本次只補充上游修正與證據限制，既有腳本與判定未修改。
 
 **11/7 20:10（台灣時間）作者確認：v0.5.2 的 Windows「已載入 DLL」（loaded-DLL）即時程序檢查可能把讀取失敗呈現為沒有命中。** [Issue #36 回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/36#issuecomment-6706766912)與 [v0.5.2 原始碼](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.5.2/src/scan.rs#L1142-L1218)顯示，取得程序清單失敗會回傳空結果；個別程序的模組快照失敗則直接跳過，未統計或揭露未檢查的程序數。因此，沒有列出載入項目，不能代表所有程序都查過或已排除常駐。**這項限制針對 loaded-DLL 檢查，不代表日誌、快取或其他檢查全部失效，也不推翻已找到的具體跡證。**
 
-**截至 11/7 21:18（台灣時間）複核，最新正式版仍為 [v0.5.2](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.2)，上述修正尚未發布。** 作者表示下一版將列出無法檢查的程序數，程序清單讀取失敗時標示該項未完成；新版正等待 Windows 簽章安排。本表僅核對作者說明與原始碼，未實測 Windows；既有腳本、感染判定與處置步驟不變。
+**截至 11/8 08:23（台灣時間）複核，最新正式版已為 [v0.6.0](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.6.0)，上述 loaded-DLL 覆蓋率修正仍未發布。** 作者先前承諾列出無法檢查的程序數，程序清單讀取失敗時標示該項未完成；但 v0.6.0 的相關程式碼未變，不能因新版已發布就當作承諾已落實。本表僅核對作者說明、版本差異與原始碼，未實測 Windows；既有腳本、感染判定與處置步驟不變。
 
 **11/7 07:11（台灣時間）[作者澄清更新後防毒命中](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6462582)：先分清舊痕跡與新執行。** 作者指出，已辨識的 Loader code cache 項目只含載入位址與時間，不含腳本；更新後的 `Trojan.Loader.K2F` 命中可能是留存的舊痕跡，**不能僅憑此認定再次感染或補丁失敗，也不能反過來當作電腦安全的證據**。仍須核對完整日誌與其他跡證；先保存證據，不要為了驗證而重開啟動器。
 
@@ -287,7 +299,15 @@ USN 的一般用途亦可參考 [Microsoft 文件](https://learn.microsoft.com/e
 
 **11/6 18:51（台灣時間）常駐範圍提醒：不要把 DLL 的載入程序限定為 Chrome。** [單一玩家回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6682079803)自述 `steamwebhelper.exe` 與 `runeapps.alt1.exe` 載入同一個 Chrome 目錄內的 DLL；[作者回覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6682943355)（18:40 發表、18:45 更新）以所分析構建的 **HKCU COM 劫持**提出解釋；[21:32 續覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6686028635)明確保留為**最可能的推測，尚未檢查 Steam／Alt1 構建**：同一使用者下會要求該 Windows Parental Controls COM 物件的其他相容程序，也可能載入已落地的 DLL。**本表未獨立核驗該玩家實機或 DLL，作者也未核驗 Steam／Alt1 的構建；其他 Chromium 程式尚未經此回報驗證。這不是 Steam、Alt1 或其他遊戲成為新投遞來源的證據，也不證明其中資料已外洩。**
 
-若報告已列出 DLL 被程序載入，維持離線，從系統匣完整結束相關主程式；只關視窗或結束 `steamwebhelper.exe`，主程式可能再次啟動它。仍按下列順序**先移除已確認的 HKCU 常駐鍵、保留正常 HKLM 的 `wpc.dll`，再重開 Windows 使各程序卸載 DLL**，刪除已確認的惡意子資料夾並複查；不要為了測試載入而開啟其他程式。從乾淨裝置保護可能在受影響程序輸入或顯示過的帳號資料；例如使用過 Steam／Alt1 者，檢視相關帳號並撤銷工作階段。這是保守處置，不是宣告每位玩家都受此路徑影響。
+**11/8 07:56 初步分析、08:08（台灣時間）[作者反組譯續覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6714845858)：單一 DLL 的「被載入」與「啟動竊取功能」須分開。** [初步分析](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6714734076)指定的是 **250,368-byte、x64** 的 `platform_experience_helper.dll`，SHA-256 為 `5cb16618da463b7b9935365e87f7962875d3001d6d08cdddfa9c7823223234cb`。作者稱未執行樣本，後續對關鍵分支反組譯後指出：
+
+- 載入時會檢查宿主檔名是否為 `chrome.exe`，以及 `chrome.dll` 是否已載入；**任一條件不符便返回，不啟動後續功能**。因此，這個樣本被 Steam、Alt1 或 Jagex Launcher 載入，不等於其竊取功能在那些程序中啟動。
+- 這個樣本向 `/px/` 送出請求後，只查 HTTP 狀態並關閉請求，**不讀取回應本文**；作者也未找到動態解析相關讀取函式的程式碼。這項結果只支持該樣本的這條傳輸路徑不能從回應本文取得指令，不能否定啟動器內 Lua RAT 的遠控能力。
+- 作者仍未找到這個樣本重新寫入登錄鍵、複製自身或建立程序的自我保護程式碼。這是目前靜態分析的發現，不能當成電腦已無其他常駐或攻擊者未做其他變更的證明。
+
+**本表於 11/8 08:23（台灣時間）核對公開留言，未取得或獨立反組譯樣本，也未實測玩家電腦。上述結論不能泛化到全部 DLL 變種或全部受影響程序，不證明任何個案沒有外洩，更不推翻 `k2f_chan` 等既有 RAT 執行跡證。** 原先非 Chrome 程序可能載入 DLL 的回報仍保留；清理、證據保全與帳號防護不變。
+
+若報告已列出 DLL 被程序載入，維持離線，從系統匣完整結束相關主程式；只關視窗或結束 `steamwebhelper.exe`，主程式可能再次啟動它。仍按下列順序**先移除已確認的 HKCU 常駐鍵、保留正常 HKLM 的 `wpc.dll`，再重開 Windows 使各程序卸載 DLL**，刪除已確認的惡意子資料夾並複查；不要為了測試載入而開啟其他程式。從乾淨裝置保護可能在受影響程序輸入或顯示過的帳號資料；例如使用過 Steam／Alt1 者，檢視相關帳號並撤銷工作階段。這是針對受感染電腦與其他已知 RAT 能力的保守處置，不是宣告這個 DLL 在非 Chrome 程序內啟動了竊取功能，也不代表每位玩家都受此路徑影響。
 
 作者另提醒 DLL 可能嵌入受害者 agent ID 與 token；**不要將 DLL 上傳公開議題或公開樣本服務**。程序掃描也可能因權限跳過部分程序，沒有列出載入項目不等於排除常駐。
 
@@ -390,9 +410,12 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 
 ## 資料來源
 
+- [v0.6.0 正式發布](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.6.0)、[完整版本差異](https://github.com/MotherSphere/NIKKE-Launcher-Check/compare/v0.5.2...v0.6.0)與 [ETag 識別提交](https://github.com/MotherSphere/NIKKE-Launcher-Check/commit/67ae59bc719fd9ba37361fce0c4a58a7a568c697)：11/8 08:07:46（台灣時間）發布、08:23 核對；新增 ETag 不等於新雜湊或不同二進位，三項既有修正未納入，未執行工具或實測 Windows
+- [11/8 DLL 初步分析](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6714734076)與[關鍵分支反組譯續覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6714845858)：07:56:58、08:08:07（台灣時間）發表，08:23 核對；僅適用指定 250,368-byte 樣本，本表未獨立核驗樣本，不否定 RAT 或泛化所有 DLL
+
 - [11/7 TUN／SRUM 單機流量歸屬回報](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6463069)、[MotherSphere 回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6463110)與 [20:51 調查更新（固定版本）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5/7d09ab9bdc4859749546e34000cd2257635732c4)：18:55、20:10 發表，22:16（台灣時間）經 GitHub gist API 核對；原始 SRUM、代理與防毒資料未獨立核驗，不泛化至所有 TUN，也不認定或排除個案外洩
 
-- [11/7 Windows loaded-DLL 覆蓋率限制（Issue #36 作者回覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/36#issuecomment-6706766912)與 [v0.5.2 原始碼](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.5.2/src/scan.rs#L1142-L1218)：20:10 發表、21:18（台灣時間）核對；程序／模組快照失敗未完整揭露，修正尚未發布，最新正式版仍 v0.5.2；未實測 Windows
+- [11/7 Windows loaded-DLL 覆蓋率限制（Issue #36 作者回覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/36#issuecomment-6706766912)與 [v0.5.2 原始碼](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/v0.5.2/src/scan.rs#L1142-L1218)：20:10 發表、21:18（台灣時間）核對；程序／模組快照失敗未完整揭露，修正當時尚未發布；11/8 08:23 複核 v0.6.0 仍未納入，未實測 Windows
 
 - [11/7 系統還原與代理／fake-IP 處置提醒（MotherSphere 回覆）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6462677)：11/7 11:39（台灣時間）核對；留言僅核實日期，玩家配置及還原結果未獨立驗證，不新增感染證據或判定
 - [Microsoft System Restore 說明](https://support.microsoft.com/en-gb/windows/experience/backup-recovery/system-restore?nochrome=true)：11/7 核對，頁面未列更新日期；支持會回復系統檔、登錄與程式，未說明 USN，不是本事件還原後再次感染的實測
@@ -403,14 +426,14 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 - [11/7 更新後 Loader 快取與防毒攔截判讀（MotherSphere 回覆）](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6462582)：07:11:18 發表、11/7 08:37（台灣時間）核對；舊痕跡不等於再次感染，單次攔截不涵蓋其他存取；玩家原檔與實機未獨立核驗
 - [11/7 USN 能力、保留範圍與安裝磁碟提醒（Issue #32 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6698090450)：07:10:47 發表、11/7 08:37（台灣時間）核對；變更紀錄不能排除純讀取／外傳，個案原始 journal 未獨立核驗
 
-- [11/7 timeout 判讀與處置澄清（Issue #33 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6698091445)：07:10:50 發表、07:17（台灣時間）核對；Infected 與完整處置不降級，僅本體執行問答擬改 Cannot tell，最新正式版仍 v0.5.2；個案原檔及原始惡意 `l.js` 未獨立核驗
+- [11/7 timeout 判讀與處置澄清（Issue #33 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6698091445)：07:10:50 發表、07:17（台灣時間）核對；Infected 與完整處置不降級，僅本體執行問答擬改 Cannot tell；11/8 08:23 複核 v0.6.0 仍未納入，個案原檔及原始惡意 `l.js` 未獨立核驗
 - [11/7 註冊標記、EIO 與檔案消失澄清（Issue #16 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/16#issuecomment-6698091916)：07:10:52 發表、07:17（台灣時間）核對；作者依個案日誌判斷本體先載入，刪除機制及 ACE 觸發條件仍未確認，本表未獨立核驗原檔或實機
 
 - [11/6 取證修正與清理碼線索（Issue #32 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6686028635)：21:32 發表、21:51（台灣時間）核對；原檔時間、使用者 HKCU 與 SYSTEM hive 須分清；位置尚非已證實惡意用途的新 IOC，Steam／Alt1 COM 解釋為最可能推測
 - [11/6 timeout 時序與構建關聯（Issue #33 作者續覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6685803432)：21:20 發表、21:51（台灣時間）核對；單例原檔未獨立核驗，中間構建與原始惡意 `l.js` 仍未知，報告修正尚未完成
 
 - [11/6 COM 常駐機制與處置補充（Issue #32 作者回覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6682943355)：18:51（台灣時間）核對；Steam／Alt1 為單一玩家自述，實機及 DLL 未獨立核驗，不是新投遞路徑
-- [11/6 下載與本體執行區分（Issue #33 作者回覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6682943728)：18:51（台灣時間）核對；timeout 個案未獨立核驗、原始惡意 `l.js` 未取得，v0.5.2 報告修正仍為承諾，最新正式發布頁仍為 v0.5.2
+- [11/6 下載與本體執行區分（Issue #33 作者回覆）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/33#issuecomment-6682943728)：18:51（台灣時間）核對；timeout 個案未獨立核驗、原始惡意 `l.js` 未取得，v0.5.2 報告修正當時仍為承諾，11/8 的 v0.6.0 亦未納入
 
 - [MotherSphere 11/6 研究回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6461096)：11/6 11:43（台灣時間）核對；補充 11/3 構建的 UNC／NAS、本機同步檔案讀取範圍及 `k2f.agent.state` 歸屬，未獨立核驗樣本或原始惡意 `l.js`，不代表個案已外洩
 
