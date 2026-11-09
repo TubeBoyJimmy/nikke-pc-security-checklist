@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-09 18:27（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-09 19:14（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -289,6 +289,8 @@ USN 的一般用途亦可參考 [Microsoft 文件](https://learn.microsoft.com/e
 
 **不能推論所有 TUN 配置都如此，也不是個案資料已外洩的證據。** 本表只核對公開回報與作者說明，未獨立核驗原始 SRUM、代理設定或防毒流量資料。請先保全紀錄，由有經驗的人員交叉核對程序歸屬與事件時間；本次不新增取證腳本，不改感染判定或帳號處置。
 
+**11/9 18:05 發表、19:14（台灣時間）核對：不要以獨立下載器程序的缺席排除下載。** [MotherSphere 同日回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6464925)指出，這次投遞使用啟動器內建的 TinyDownloader，不是另開 `tiny_downloader.exe` 或 `cgi_curl.exe`；作者將下載流量歸於 SRUM 的 `nikke_launcher.exe`，因此找不到前兩個名稱的紀錄不能排除 payload 下載。**這是研究者對已分析路徑的說明，本表未獨立驗證啟動器或個案 SRUM，不能泛化所有版本；接收量也不能單獨證明下載的是惡意檔案、本體已執行或資料已外洩。** 保全既有紀錄後再交叉核對日誌與時間，不要為了補測重新連網或重開啟動器；感染判定與處置不變。
+
 **11/8 18:00（台灣時間）另一則單機回報：多個有接收流量的程序，送出計數仍為零。** [玩家自述](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6464047)，其啟動器 SRUM 紀錄均在有線乙太網路介面，接收量仍按程序記錄，因此認為不同於前述 TUN 代理歸屬情況；同一時段 58 筆有接收的紀錄中，46 筆顯示送出為零，且多個正常運作須送出請求的程式也如此。玩家表示成因未知。**本表只核對公開自述，未獨立核驗原始 SRUM、網路設定或工具解析；不能泛化為所有有線／非 TUN 電腦都會漏記，也不能認定該台已外洩。**
 
 **判讀零值前，先交叉核對同時段其他程序的計數完整性。** 保全現有紀錄後，可由有經驗的人員查看同一時段有接收、且正常運作須送出請求的其他程序，是否也大量顯示送出為零；有這種異常時，不能用該機送出欄位的零值排除外傳。沒有觀察到這種異常，也不代表單一程序零值足以排除外傳。**這是本表依回報補充的判讀提醒，不是已確認的 Windows／SRUM 缺陷；感染判定與帳號處置不變。** 不要為了補測而重新連網或重開啟動器。
@@ -314,6 +316,8 @@ USN 的一般用途亦可參考 [Microsoft 文件](https://learn.microsoft.com/e
 **11/9 18:05（台灣時間）載入鏈澄清：不要把 DLL 與啟動器內的 Lua agent 混為一談。** [MotherSphere 新回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6464925)針對上列 `5cb16618…34cb` 樣本表示，未找到 Lua／k2f 相關字串或載入 Lua 的程式碼；205,135-byte 的 `insight.bundle` 是在啟動器內執行的 Lua agent，其 `chrome_install` 命令才負責寫入 DLL 與 HKCU 常駐值。作者依周邊字串推測，DLL 的「evaluated bundle」指錢包擴充功能自身的 JavaScript，可能經 DevTools 操作其 service worker，**不是 DLL 載入 Lua 的證據**。
 
 **兩份研究的載入鏈說法仍未釐清。** [WormW 11/4 技術分析（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/docs/en/technical-analysis.md)把 `Sample-A.dll` 描述為載入 Lua bundle 的 loader，與上述回覆不一致。WormW 的 DLL 雜湊為 `f3e93d04…d252`，與 MotherSphere 分析的樣本不同，兩者同為 250,368 bytes；作者推測差異可能來自每份 DLL 寫入的受害者識別與 token，**本表未比對兩份樣本，不能據此斷言相同或不同構建，也不代替研究者裁定衝突**。原始惡意 `l.js` 仍未取得，不能由這次 DLL 分析推論第一階段的完整能力，或否定啟動器 RAT、其他構建與個案外洩風險。
+
+**11/9 18:26 發表、19:14（台灣時間）核對：外部 YARA 規則也有樣本涵蓋限制。** MotherSphere 在 [WormW Issue #3](https://github.com/WormW/nikke_malware_analysis/issues/3) 回報，`K2F_Loader_DLL_Generic` 不會命中上述 **250,368-byte、SHA-256 `5cb16618…34cb`** DLL：兩個 `$loader*` 字串存在，但規則必要的 `$k2f_*` 字串都不存在。本表唯讀核對 [YARA 規則（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/yara/k2f_loader.yar)，確認條件同時要求兩個 `$loader*` 與至少一個 `$k2f_*`；**未取得樣本或獨立重現掃描，漏檢仍是研究者針對該樣本的回報，不能泛化到所有 DLL 或其他 YARA 規則。** 截至核對，Issue 仍開啟且沒有回覆；作者要求釐清 DLL→Lua 描述與規則，**不代表 WormW 已接受更正，兩份研究的載入鏈衝突仍未解決**。不要以這條規則沒有命中排除感染；本表腳本、感染判定與處置建議不變。
 
 **同日編譯時間更正。** [Issue #32 作者續覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6737335567)將該樣本 PE 標頭時間更正為 **2026-10-29 18:52:01 UTC（台灣時間 10/30 02:52:01）**；先前 19:52:01 是工具顯示本地時間造成的時區誤讀，**不是另一個構建的證據**。PE 標頭時間也不能當作個案感染時間或全事件投遞起點。本表於 **11/9 18:27（台灣時間）**核對公開回覆與 WormW 固定版文字，未取得、執行或獨立反組譯樣本；**腳本、感染判定、證據保全與帳號防護建議不變**。
 
