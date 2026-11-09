@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-09 02:36（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-09 18:27（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -310,6 +310,12 @@ USN 的一般用途亦可參考 [Microsoft 文件](https://learn.microsoft.com/e
 - 作者仍未找到這個樣本重新寫入登錄鍵、複製自身或建立程序的自我保護程式碼。這是目前靜態分析的發現，不能當成電腦已無其他常駐或攻擊者未做其他變更的證明。
 
 **本表於 11/8 08:23（台灣時間）核對公開留言，未取得或獨立反組譯樣本，也未實測玩家電腦。上述結論不能泛化到全部 DLL 變種或全部受影響程序，不證明任何個案沒有外洩，更不推翻 `k2f_chan` 等既有 RAT 執行跡證。** 原先非 Chrome 程序可能載入 DLL 的回報仍保留；清理、證據保全與帳號防護不變。
+
+**11/9 18:05（台灣時間）載入鏈澄清：不要把 DLL 與啟動器內的 Lua agent 混為一談。** [MotherSphere 新回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6464925)針對上列 `5cb16618…34cb` 樣本表示，未找到 Lua／k2f 相關字串或載入 Lua 的程式碼；205,135-byte 的 `insight.bundle` 是在啟動器內執行的 Lua agent，其 `chrome_install` 命令才負責寫入 DLL 與 HKCU 常駐值。作者依周邊字串推測，DLL 的「evaluated bundle」指錢包擴充功能自身的 JavaScript，可能經 DevTools 操作其 service worker，**不是 DLL 載入 Lua 的證據**。
+
+**兩份研究的載入鏈說法仍未釐清。** [WormW 11/4 技術分析（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/docs/en/technical-analysis.md)把 `Sample-A.dll` 描述為載入 Lua bundle 的 loader，與上述回覆不一致。WormW 的 DLL 雜湊為 `f3e93d04…d252`，與 MotherSphere 分析的樣本不同，兩者同為 250,368 bytes；作者推測差異可能來自每份 DLL 寫入的受害者識別與 token，**本表未比對兩份樣本，不能據此斷言相同或不同構建，也不代替研究者裁定衝突**。原始惡意 `l.js` 仍未取得，不能由這次 DLL 分析推論第一階段的完整能力，或否定啟動器 RAT、其他構建與個案外洩風險。
+
+**同日編譯時間更正。** [Issue #32 作者續覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6737335567)將該樣本 PE 標頭時間更正為 **2026-10-29 18:52:01 UTC（台灣時間 10/30 02:52:01）**；先前 19:52:01 是工具顯示本地時間造成的時區誤讀，**不是另一個構建的證據**。PE 標頭時間也不能當作個案感染時間或全事件投遞起點。本表於 **11/9 18:27（台灣時間）**核對公開回覆與 WormW 固定版文字，未取得、執行或獨立反組譯樣本；**腳本、感染判定、證據保全與帳號防護建議不變**。
 
 若報告已列出 DLL 被程序載入，維持離線，從系統匣完整結束相關主程式；只關視窗或結束 `steamwebhelper.exe`，主程式可能再次啟動它。仍按下列順序**先移除已確認的 HKCU 常駐鍵、保留正常 HKLM 的 `wpc.dll`，再重開 Windows 使各程序卸載 DLL**，刪除已確認的惡意子資料夾並複查；不要為了測試載入而開啟其他程式。從乾淨裝置保護可能在受影響程序輸入或顯示過的帳號資料；例如使用過 Steam／Alt1 者，檢視相關帳號並撤銷工作階段。這是針對受感染電腦與其他已知 RAT 能力的保守處置，不是宣告這個 DLL 在非 Chrome 程序內啟動了竊取功能，也不代表每位玩家都受此路徑影響。
 
