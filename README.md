@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-09 19:13（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-10 07:35（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -36,6 +36,16 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 - **紀錄只能證明木馬跑過**，看不出哪些資料被拿走了。
 
 **11/6 研究補充：NAS／分享資料夾與同步檔案也可能在讀取範圍內。** [MotherSphere 11/6 回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6461096)依所分析的 **11/3 構建**指出，任意讀檔能力不限於固定蒐集清單；執行帳號有權限存取的 UNC／NAS 分享，以及本機 OneDrive 等同步資料夾，也可能被讀取。這不是已證明能直接讀取所有雲端資料。**這是研究者對樣本能力的分析，本表未獨立核驗反編譯內容；不能套用到全部構建，也不代表任何特定分享或檔案已被讀取、外傳，更不是 NAS 本身已感染的證據。**
+
+### 11/9 研究更正與判讀限制
+
+**11/9 22:55（台灣時間），MotherSphere 向 WormW 提出四項更正。** 本表於 **11/10 07:35（台灣時間）**核對 [Issue #4](https://github.com/WormW/nikke_malware_analysis/issues/4)、[#5](https://github.com/WormW/nikke_malware_analysis/issues/5)、[#6](https://github.com/WormW/nikke_malware_analysis/issues/6) 與 [#7](https://github.com/WormW/nikke_malware_analysis/issues/7)：四則均仍開啟、沒有回覆，WormW 預設分支仍為 `07f1bf4`。以下是 **MotherSphere 對 `6ae90538` 構建的分析與更正主張**，不是 WormW 已接受更正，也不是本表獨立重現的結論；作者稱該構建與 `6ae9f628` 位元組相同，本表未取得或比對樣本。
+
+- **`k2f_chan` 的對象有爭議。** [#4](https://github.com/WormW/nikke_malware_analysis/issues/4) 指出，它是啟動器 Lua `comm_center` 註冊的服務，不是 Windows named pipe；`CreatePipe` 等呼叫則用於 `exec` 子程序的輸入／輸出。WormW [現有處置說明（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/README.en.md#L217-L223)仍要求查找同名 pipe。**不要以找不到同名 Windows pipe 排除感染；既有日誌中的 `k2f_chan registered` 判讀不變。**
+- **Slack 字串不能直接當作外傳通道的證據。** [#5](https://github.com/WormW/nikke_malware_analysis/issues/5) 指出，Slack webhook 網址前綴位於 `keyscan` 的秘密資料搜尋規則中，是被搜尋的資料；作者稱 Lua agent 的連線與上傳經由 `tbs_browser.exe` 內的 `l.js`。這與 WormW [第二外傳通道說法（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/README.en.md#L29)不同。**不能只憑這些字串或正常 Slack webhook 流量認定本事件外洩；本表不把 Slack 網域新增為攻擊 IOC。** 原始惡意 `l.js` 仍未取得，這項更正也不能證明所有外傳路徑都已查清。
+- **感染處置不因缺少後續啟動標記而降級。** [#7](https://github.com/WormW/nikke_malware_analysis/issues/7) 再次主張，`k2f_chan registered` 已代表 agent 執行；之後出現 EIO、缺少 `adopted`，仍不能排除其他次啟動或日誌缺漏。本表原有感染判定不變，也不因此宣告任何特定資料已外洩。帳號處理不能只限於已公布的自動蒐集清單，見[帳號處置](#2-用手機或另一台乾淨的電腦處理帳號)；[#6 的 DLL 模板方向澄清](#4-清理電腦)見清理章節。
+
+本次僅補充公開研究的分歧、來源與限制，**不修改檢查腳本或感染判定，也未執行惡意程式、實測玩家電腦或重現網路行為**。
 
 ### 官方說法
 
@@ -257,6 +267,8 @@ MotherSphere 表示，該討論已貼出的 `insight.bundle` 下載網址都指�
 3. **這台電腦瀏覽器存過密碼的帳號**：Discord、Steam、網路銀行等。
 4. **受影響電腦可存取的 NAS／檔案分享與雲端同步帳號**：從乾淨裝置檢視存取、登入紀錄及共用權限；若相關密碼、憑證或工作階段可能暴露，更新或撤銷它們。公司帳號交由 IT 協調，避免擅自中斷共用服務。這是依讀檔能力提出的保守處置，不是已確認這些服務被入侵。
 
+**11/9 22:55（台灣時間）研究者補充：已確認感染者，以上清單只是處理優先順序，不是暴露範圍的上限。** MotherSphere 在 [WormW Issue #7](https://github.com/WormW/nikke_malware_analysis/issues/7) 指出，agent 的任意指令、讀檔與檔案傳輸能力，可能涵蓋自動蒐集清單之外的資料，而啟動器日誌不記錄所有命令。作者建議從乾淨裝置更換受影響電腦可存取的全部密碼與 token，並撤銷工作階段；公司憑證由 IT 協調。這是研究者的保守處置建議，**不是已證實所有資料都被讀取或外傳**；本表未獨立核驗樣本，不改變既有感染分類。
+
 每個帳號都要：
 
 - 換一組新的、沒在別處用過的密碼
@@ -316,6 +328,8 @@ USN 的一般用途亦可參考 [Microsoft 文件](https://learn.microsoft.com/e
 **11/9 18:05（台灣時間）載入鏈澄清：不要把 DLL 與啟動器內的 Lua agent 混為一談。** [MotherSphere 新回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6464925)針對上列 `5cb16618…34cb` 樣本表示，未找到 Lua／k2f 相關字串或載入 Lua 的程式碼；205,135-byte 的 `insight.bundle` 是在啟動器內執行的 Lua agent，其 `chrome_install` 命令才負責寫入 DLL 與 HKCU 常駐值。作者依周邊字串推測，DLL 的「evaluated bundle」指錢包擴充功能自身的 JavaScript，可能經 DevTools 操作其 service worker，**不是 DLL 載入 Lua 的證據**。
 
 **兩份研究的載入鏈說法仍未釐清。** [WormW 11/4 技術分析（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/docs/en/technical-analysis.md)把 `Sample-A.dll` 描述為載入 Lua bundle 的 loader，與上述回覆不一致。WormW 的 DLL 雜湊為 `f3e93d04…d252`，與 MotherSphere 分析的樣本不同，兩者同為 250,368 bytes；作者推測差異可能來自每份 DLL 寫入的受害者識別與 token，**本表未比對兩份樣本，不能據此斷言相同或不同構建，也不代替研究者裁定衝突**。原始惡意 `l.js` 仍未取得，不能由這次 DLL 分析推論第一階段的完整能力，或否定啟動器 RAT、其他構建與個案外洩風險。
+
+**11/9 22:55（台灣時間）[#6 再補充 DLL 模板方向](https://github.com/WormW/nikke_malware_analysis/issues/6)：** MotherSphere 稱，所分析 Lua agent 的 `chrome_install` 會接收 DLL 模板，將 agent ID 與 token 寫入模板後安裝；`analytics.insightjs.com` 主機字串固定在 DLL 中。作者因此反對把它寫成「DLL 向 Lua 提供連線參數」或「兩者使用相同 `/px/` 協定」。這延續上述載入鏈分歧，**本表未比對 DLL 或反編譯 agent，也未獨立重現協定；截至 11/10 07:35（台灣時間），該議題仍未獲回覆**。每台電腦的 DLL 可能因嵌入不同參數而有不同雜湊，不能只憑雜湊不同推定不同程式邏輯；仍不要公開上傳 DLL。
 
 **11/9 18:26 發表、19:13（台灣時間）核對：外部 YARA 規則也有樣本涵蓋限制。** MotherSphere 在 [WormW Issue #3](https://github.com/WormW/nikke_malware_analysis/issues/3) 回報，`K2F_Loader_DLL_Generic` 不會命中上述 **250,368-byte、SHA-256 `5cb16618…34cb`** DLL：兩個 `$loader*` 字串存在，但規則必要的 `$k2f_*` 字串都不存在。本表唯讀核對 [YARA 規則（固定版本）](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/yara/k2f_loader.yar)，確認條件同時要求兩個 `$loader*` 與至少一個 `$k2f_*`；**未取得樣本或獨立重現掃描，漏檢仍是研究者針對該樣本的回報，不能泛化到所有 DLL 或其他 YARA 規則。** 截至核對，Issue 仍開啟且沒有回覆；作者要求釐清 DLL→Lua 描述與規則，**不代表 WormW 已接受更正，兩份研究的載入鏈衝突仍未解決**。不要以這條規則沒有命中排除感染；本表腳本、感染判定與處置建議不變。
 
@@ -423,6 +437,8 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 **11/5 [官方手動指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)明確表示手機版本未受這次事件影響，只玩手機版的人不需為此事件額外檢查。** 這不涵蓋同時在 PC 版使用過的帳號。用 Linux 或 Steam Deck（Proton）跑 PC 版仍有研究者記錄的風險；官方這份 Windows 指南不是 Proton 的安全確認。本表指令只適用 Windows，其他系統請看 [MotherSphere 的檢查工具說明](https://github.com/MotherSphere/NIKKE-Launcher-Check)。
 
 ## 資料來源
+
+- [11/9 MotherSphere 對 WormW 的更正 #4](https://github.com/WormW/nikke_malware_analysis/issues/4)、[#5](https://github.com/WormW/nikke_malware_analysis/issues/5)、[#6](https://github.com/WormW/nikke_malware_analysis/issues/6)、[#7](https://github.com/WormW/nikke_malware_analysis/issues/7)：11/9 22:55（台灣時間）發表，11/10 07:35 核對；涉及 comm_center／pipe、Slack 字串歸屬、DLL 模板與感染後處置。四則仍開啟且無回覆，WormW 預設分支仍為 `07f1bf4`；本表僅核對公開論述及固定版文件，未獨立核驗樣本、反編譯或實機，不視為上游已接受更正。
 
 - [v0.6.0 正式發布](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.6.0)、[完整版本差異](https://github.com/MotherSphere/NIKKE-Launcher-Check/compare/v0.5.2...v0.6.0)與 [ETag 識別提交](https://github.com/MotherSphere/NIKKE-Launcher-Check/commit/67ae59bc719fd9ba37361fce0c4a58a7a568c697)：11/8 08:07:46（台灣時間）發布、08:23 核對；新增 ETag 不等於新雜湊或不同二進位，三項既有修正未納入，未執行工具或實測 Windows
 - [11/8 DLL 初步分析](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6714734076)與[關鍵分支反組譯續覆](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6714845858)：07:56:58、08:08:07（台灣時間）發表，08:23 核對；僅適用指定 250,368-byte 樣本，本表未獨立核驗樣本，不否定 RAT 或泛化所有 DLL
