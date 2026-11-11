@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-12 03:12（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-12 05:14（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -239,6 +239,14 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 同一回覆分析的 Norton 警示，只表示它回報攔截了該次 Chrome 儲存密碼讀取，**不能證明 Cookie、其他瀏覽器或其他指令也被攔下**，既有改密碼與撤銷工作階段建議不變。這些是研究者對玩家貼文／截圖的解讀，部分路徑被截斷；**本表未獨立核驗原檔、實機或防毒紀錄，不據偵測名稱或檔案日期新增本事件 IOC，也不改感染判定**。
 
+### 11/11 `tbs_cache` 防毒警示：研究者說法與限制
+
+**11/11 17:41（台灣時間），whyKusanagi [發文](https://x.com/whyKusanagi/status/2120451796242161793)主張，部分常被轉貼的 `tbs_cache` 中 `Zapchast`／`Backdoor.Script.Nikke` 警示，指向啟動器 CAPTCHA 的裝置指紋腳本，屬於誤報。** 研究者在[後續說明](https://x.com/whyKusanagi/status/2120451797781487660)中稱，核對過自己受感染電腦的日誌及部分玩家提交的日誌。**這是研究者對其檢視案例的解讀，不是防毒廠商裁定，也不是本表獨立核驗原檔的結果。**
+
+本表於 **11/12 05:14（台灣時間）**整理此說法。貼文未提供可供逐檔對照的 SHA-256、防毒引擎／安全性情報版本或完整樣本級核對資料，**不能只憑相同路徑或偵測名稱，把任意警示判成誤報；也不能只憑這類警示認定本事件再次感染或補丁失敗。** 這與上方 `Trojan.Loader.K2F` 舊快取痕跡、檢查工具 v0.5.1 的 Defender 警示是不同議題，不能互相套用。
+
+**保留既有偵測名稱、路徑、時間與報告，維持可疑檔案的隔離，等待防毒廠商或具備原檔的人員逐案核實。** 不要為此關閉防毒、加入排除、還原放行檔案或重開啟動器測試；已隔離的電腦維持離線。此說法不推翻 `k2f_chan registered`、已確認惡意 DLL 等具體跡證，也不能證明整台電腦安全或帳號資料未暴露。**既有隔離、證據保全、帳號保護、腳本與感染判定均不變。**
+
 ### 早期投遞腳本的證據界限
 
 **11/5 補充研究限制，並非新增感染案例。** [MotherSphere 原留言](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6456552)指出，該討論中尚無人公開早期負責選擇下載位置、投遞木馬的 `l.js`。[WormW 固定版本分析](https://github.com/WormW/nikke_malware_analysis/blob/07f1bf4b2b9f16a83dd101a33c0eabf81cd2fb8a/docs/attack-path.md#0-证据来源与结论边界)取得的 9,145 bytes 副本，是 **11/4 01:30（台灣時間）後被換成的 `/speed` 分析版本，不是早期惡意投遞版**。不能用這份事後副本證明先前腳本沒有其他功能。
@@ -470,6 +478,8 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 **11/5 [官方手動指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)明確表示手機版本未受這次事件影響，只玩手機版的人不需為此事件額外檢查。** 這不涵蓋同時在 PC 版使用過的帳號。用 Linux 或 Steam Deck（Proton）跑 PC 版仍有研究者記錄的風險；官方這份 Windows 指南不是 Proton 的安全確認。本表指令只適用 Windows，其他系統請看 [MotherSphere 的檢查工具說明](https://github.com/MotherSphere/NIKKE-Launcher-Check)。
 
 ## 資料來源
+
+- [whyKusanagi 對部分 `tbs_cache` 防毒警示的說明](https://x.com/whyKusanagi/status/2120451796242161793)與[日誌核對範圍補充](https://x.com/whyKusanagi/status/2120451797781487660)：11/11 17:41（台灣時間）發文，11/12 05:14 整理；CAPTCHA 裝置指紋腳本誤報屬研究者對其檢視案例的說法，未提供逐檔雜湊或防毒廠商裁定。本表未獨立核驗原檔，不據同名警示排除感染、恢復檔案或降低既有處置
 
 - [11/12 啟動器權限與跨帳號修正（Issue #1 第 8、22 項）](https://github.com/SpringZali/nikke-launcher-triage/issues/1)、[維護者核對回覆](https://github.com/SpringZali/nikke-launcher-triage/issues/1#issuecomment-6804791970)與[v3.8.1 社群報告更正（固定版本）](https://github.com/SpringZali/nikke-launcher-triage/blob/dcea0343e5fb73cf2eb3be4c53759e10ae130d67/community/README.md#corrections-nov-11)：00:55 提出、03:05 維護者回覆、03:12（台灣時間）核對；兩個版本的 manifest 為維護者檢視結果，本表未獨立核驗二進位。UAC 使用其他管理員帳號時須核對該帳號的痕跡，可能暴露範圍依實際權限而定；不證明歷史提權、SYSTEM 存取或個案資料外洩
 
