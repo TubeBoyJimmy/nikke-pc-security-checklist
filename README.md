@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-12 01:23（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-12 03:12（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -38,6 +38,16 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 - **紀錄只能證明木馬跑過**，看不出哪些資料被拿走了。
 
 **11/6 研究補充：NAS／分享資料夾與同步檔案也可能在讀取範圍內。** [MotherSphere 11/6 回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6461096)依所分析的 **11/3 構建**指出，任意讀檔能力不限於固定蒐集清單；執行帳號有權限存取的 UNC／NAS 分享，以及本機 OneDrive 等同步資料夾，也可能被讀取。這不是已證明能直接讀取所有雲端資料。**這是研究者對樣本能力的分析，本表未獨立核驗反編譯內容；不能套用到全部構建，也不代表任何特定分享或檔案已被讀取、外傳，更不是 NAS 本身已感染的證據。**
+
+### 啟動器提權與其他 Windows 帳號
+
+**11/12 03:12（台灣時間）核對：不要把可能受影響範圍只限於當時登入桌面的帳號。** MotherSphere 於 **11/12 00:55** 在 [SpringZali Issue #1 第 8、22 項](https://github.com/SpringZali/nikke-launcher-triage/issues/1)提出修正；該指南維護者在 **03:05 的[回覆](https://github.com/SpringZali/nikke-launcher-triage/issues/1#issuecomment-6804791970)**中表示，已分別在可取得的 **0.0.6.709、0.0.6.841** 啟動器 manifest 讀到 `requireAdministrator`，並在 v3.8／v3.8.1 納入修正。這是研究者與另一社群指南的公開核對結果，不是官方新增受害範圍公告。
+
+- **UAC 若輸入另一個管理員帳號的憑證，執行帳號也會改變。** 在此情況下，啟動器及其內部執行的 agent 使用該管理員帳號的身分，而非原本登入桌面的標準帳號。檢查與證據保全須涵蓋該執行帳號的 `%APPDATA%\nikke_launcher*`（依版本包含一般、HMT、Google Play Games 資料夾）、`%TEMP%`、已知 HKCU CLSID 鍵與相關 DLL 路徑。**只查目前登入帳號沒有命中，不能排除另一個執行帳號的痕跡；取證時另行提權，也要確認沒有把 HKCU 指向錯的帳號。**
+- **管理員權限可能擴大可讀取範圍。** 依[社群報告的具名更正（固定版本）](https://github.com/SpringZali/nikke-launcher-triage/blob/dcea0343e5fb73cf2eb3be4c53759e10ae130d67/community/README.md#corrections-nov-11)，agent 可繼承啟動器的提權權限；同一台電腦其他帳號中、該身分與權限可存取的資料，也應納入可能暴露範圍評估，不能只看原登入帳號的自動蒐集清單。這不代表管理員一定能解密所有資料，**也不代表已取得 SYSTEM 權限或已讀取、外傳那些資料**。
+- **歷史權限仍需個案證據。** [原報告作者的更正](https://github.com/SpringZali/nikke-launcher-triage/issues/1#issuecomment-6803742927)承認，保留日誌支持 agent 執行，但未確定當時有效權限。此次檢視的 0.0.6.841 副本最後寫入於 11/4，不能證明同一檔案在更早事件時已存在；「10/29 已有玩家使用此版本」仍是 MotherSphere 的說法，該指南未獨立核對。**manifest 的提權要求不能單獨證明任一玩家當時確實提權、取得 SYSTEM 或資料遭竊。**
+
+本表僅核對公開議題、回覆與固定版更正，未檢查啟動器二進位、惡意樣本或玩家實機。若不確定執行帳號，先維持隔離、保存現有證據，交由 IT 或熟悉 Windows 取證的人員離線辨識；不要為了測試而重開啟動器、切換帳號執行它或重新輸入管理員憑證。從乾淨裝置處理可能暴露的帳密、token 與工作階段，涉及其他使用者或公司資料時由本人／IT 協調。**本次補充檢查範圍與證據限制，不修改腳本、感染判定或既有隔離與先保全再清理的順序。**
 
 ### 11/9 研究更正與判讀限制
 
@@ -148,7 +158,7 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 
 **本表的一鍵 PowerShell 檢查尚未加入這項解析。** 若先前只用本表指令、純文字搜尋，或 MotherSphere 舊版工具，得到「沒找到已知痕跡」或只有接觸、未見木馬的結果，建議用已正式發布的 [v0.6.0](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.6.0) 重新檢查，尤其是 `debug.log` 已遺失或被覆寫時：
 
-**11/5 05:16（台灣時間）新增防毒警示回報。** 一名玩家在[上游 Issue #22](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)回報，執行 v0.5.1 掃描時，Windows Defender 立即隔離檢查工具，偵測名稱為 `Trojan:Win32/Bearfoos.A!ml`。回報未附被隔離檔案的 SHA-256、Defender 引擎／安全性情報版本或完整偵測紀錄。作者於 **11/5 06:17** 回覆，並在 **11/5 08:14** [更新同一則留言](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6643556806)，主張這是誤報，**表示已將 v0.5.1 提交 Microsoft 申訴**，並把還原檔案的建議放在 Microsoft 確認排除偵測、更新 Defender 之後。這是作者的說明與申訴狀態，**議題仍開啟，未見 Microsoft 裁定；不能寫成已證實誤報、已解決，也不能據此斷言工具惡意。** v0.6.0 的發布亦不等於這個防毒問題已排除。
+**11/5 05:16（台灣時間）新增防毒警示回報。** 一名玩家在[上游 Issue #22](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)回報，執行 v0.5.1 掃描時，Windows Defender 立即隔離檢查工具，偵測名稱為 `Trojan:Win32/Bearfoos.A!ml`。回報未附被隔離檔案的 SHA-256、Defender 引擎／安全性情報版本或完整偵測紀錄。作者於 **11/5 06:17** 回覆，並在 **11/5 08:14** [更新同一則留言](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6643556806)，主張這是誤報，**表示已將 v0.5.1 提交 Microsoft 申訴**，並把還原檔案的建議放在 Microsoft 確認排除偵測、更新 Defender 之後。這是作者的說明與申訴狀態。**11/12 03:12（台灣時間）複核：議題已於 11/9 18:06 [因數日沒有新問題而關閉](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6737345490)，不是 Microsoft 裁定；該議題仍未提供廠商排除偵測的確認，不能寫成已證實誤報、已解決，也不能據此斷言工具惡意。** v0.6.0 的發布亦不等於這個防毒問題已排除。
 
 **若防毒攔截或隔離檢查工具，先停止使用並保持隔離，不要為了執行它而關閉防毒、加入排除或還原放行。** 保留偵測名稱、時間與報告，等待工具作者或防毒廠商核實；版本與雜湊核對不能取代安全審核。
 
@@ -252,6 +262,8 @@ MotherSphere 表示，該討論已貼出的 `insight.bundle` 下載網址都指�
 | **有接觸** | 啟動器載入過攻擊腳本，但沒找到木馬執行的痕跡 | **帳號照中毒處理**（第 2、3 步）。電腦本身沒有中毒證據，不用急著重灌 |
 | **資料不足** | 找不到 `debug.log`、重裝過，或紀錄沒涵蓋你玩的日期 | 無法判斷，帳號照「有接觸」處理 |
 | **沒找到已知痕跡** | 已知的痕跡都沒出現 | 做完[先做這三件事](#先做這三件事)，並留意[官方最新措施與限制](#官方說法) |
+
+**執行帳號也屬檢查範圍。** 若開啟動器時曾在 UAC 輸入另一個管理員帳號的憑證，只查目前登入帳號的結果不足以排除；請看[提權與其他 Windows 帳號的限制](#啟動器提權與其他-windows-帳號)。這項提醒不更改下列感染判定。
 
 **以下任何一項出現，就算中毒（證明木馬跑過）：**
 
@@ -459,6 +471,8 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 
 ## 資料來源
 
+- [11/12 啟動器權限與跨帳號修正（Issue #1 第 8、22 項）](https://github.com/SpringZali/nikke-launcher-triage/issues/1)、[維護者核對回覆](https://github.com/SpringZali/nikke-launcher-triage/issues/1#issuecomment-6804791970)與[v3.8.1 社群報告更正（固定版本）](https://github.com/SpringZali/nikke-launcher-triage/blob/dcea0343e5fb73cf2eb3be4c53759e10ae130d67/community/README.md#corrections-nov-11)：00:55 提出、03:05 維護者回覆、03:12（台灣時間）核對；兩個版本的 manifest 為維護者檢視結果，本表未獨立核驗二進位。UAC 使用其他管理員帳號時須核對該帳號的痕跡，可能暴露範圍依實際權限而定；不證明歷史提權、SYSTEM 存取或個案資料外洩
+
 - [Colony Labs 協調揭露狀態（固定版本）](https://github.com/Colony-Labs/.github/blob/da9b401936c18a886cb1e64b2ba7d2e1474c5672/profile/README.md#current-work)與[CISA 更正提交](https://github.com/Colony-Labs/.github/commit/da9b401936c18a886cb1e64b2ba7d2e1474c5672)：更正提交為 11/11 20:37（台灣時間），11/12 01:23 核對；10 份通報、通報日期、協調單位及 12/8 揭露安排均為研究者公開說法。未取得私下通報或獨立驗證技術內容，不新增 IOC、投遞路徑或已遭利用結論，也不把 11/12 官方更新視為對應修復證據
 
 - [11/10 官方安全檢查補充公告](https://nikke-en.com/newsdetail.html?content_id=d58204e4a5cc4a4824a8dd3a77f0f5089e12)與[台港澳後續措施更正](https://nikke.hotcool.tw/News_detail-240)：英文公告 CMS 發布時間為 11/10 23:50（台灣時間），11/11 00:21 核對全文；台港澳頁首仍為 11/5，正文標註 11/11 更正。視窗時機、多語系與服務恢復為官方說法，11/12（UTC+9）防護更新為預定；未實測 ACE、清除效果或部署，不作全面安全保證
@@ -500,7 +514,7 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 - MotherSphere [NIKKE-Launcher-Check](https://github.com/MotherSphere/NIKKE-Launcher-Check)：[事件細節](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/incident.md)、[處置方式](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/what-to-do.md)、[檢查項目](https://github.com/MotherSphere/NIKKE-Launcher-Check/blob/main/docs/checks.md)
 - [v0.5.2 正式發布（11/5 06:40，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.5.2)：Temp 誤報修正、Google Play Games 版辨識與啟動失敗報告
 - [Google Play Games PC 版玩家摘要](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6640267816)、[作者回覆（11/5 06:41，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6644005418)與[玩家公開命中節錄（11/5 10:43:31，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6648246141)：查核至 11/5 10:53；已公開 7 組兩類字串節錄，完整原始日誌尚未獨立核驗
-- [v0.5.1 被 Defender 隔離的玩家回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)與[作者更新（11/5 08:14，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6643556806)：作者主張誤報並表示已提交 Microsoft 申訴，議題仍開啟，未見廠商裁定
+- [v0.5.1 被 Defender 隔離的玩家回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22)與[作者更新（11/5 08:14，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6643556806)：作者主張誤報並表示已提交 Microsoft 申訴；11/12 03:12 複核，議題於 11/9 18:06 [因無新問題而關閉](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/22#issuecomment-6737345490)，未提供廠商裁定，關閉不等於排除偵測
 - [Temp 誤報確認（11/5 06:41，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/19#issuecomment-6644006713)、[gzip 快取漏看作者回覆](https://gist.github.com/MotherSphere/d6c049a09ba8ac3085c51ee9df24a4e5?permalink_comment_id=6457471)
 - [原玩家更正更新後日誌消失的說法（11/8 02:22，台灣時間）](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6711269543)：`debug.log` 仍在，鎖定／寫入僅為推測；玩家稱 `tinyget` 日誌未加密，本表未獨立核驗附件或實機。取代 [11/5 17:28 發表、17:29 更新的原回報](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6654463139)，不代表所有版本或更新均保留日誌
 - [tinyget 日期更正](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/11#issuecomment-6654206829)、[Lua 命令觸發界限](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/17#issuecomment-6654207517)、[兩個 loader-only 個案的限制](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/25#issuecomment-6654208278)：作者均於 11/5 17:14（台灣時間）回覆；本表未獨立核驗個案原檔或反編譯內容
