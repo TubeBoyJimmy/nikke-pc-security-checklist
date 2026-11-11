@@ -1,6 +1,6 @@
 # NIKKE PC 啟動器木馬檢查表（Windows）
 
-資料更新：2026-11-11 00:21（台灣時間）。事件還在發展，請以官方後續公告為準。
+資料更新：2026-11-12 01:23（台灣時間）。事件還在發展，請以官方後續公告為準。
 
 ## 先做這三件事
 
@@ -48,6 +48,14 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 - **感染處置不因缺少後續啟動標記而降級。** [#7](https://github.com/WormW/nikke_malware_analysis/issues/7) 再次主張，`k2f_chan registered` 已代表 agent 執行；之後出現 EIO、缺少 `adopted`，仍不能排除其他次啟動或日誌缺漏。本表原有感染判定不變，也不因此宣告任何特定資料已外洩。帳號處理不能只限於已公布的自動蒐集清單，見[帳號處置](#2-用手機或另一台乾淨的電腦處理帳號)；[#6 的 DLL 模板方向澄清](#4-清理電腦)見清理章節。
 
 本次僅補充公開研究的分歧、來源與限制，**不修改檢查腳本或感染判定，也未執行惡意程式、實測玩家電腦或重現網路行為**。
+
+### 協調揭露中的啟動器研究
+
+**11/12 01:23（台灣時間）核對：[Colony Labs 公開頁面（固定版本）](https://github.com/Colony-Labs/.github/blob/da9b401936c18a886cb1e64b2ba7d2e1474c5672/profile/README.md#current-work)列出 NIKKE Windows PC 啟動器的 10 份安全公告（advisories），技術內容仍未公開。** 該團隊由 MotherSphere 與 whyKusanagi 組成；研究者稱已於 **11/8** 向 Level Infinite／Proxima Beta 通報，**11/10** 補充，預定 **12/8** 公開；若個別項目先完成修復並經研究者驗證，可提前公開。
+
+- **通報與協調狀態屬研究者說法。** 頁面列出的協調單位為 SingCERT、KrCERT/CC、JPCERT/CC。[11/11 20:37 的更正提交](https://github.com/Colony-Labs/.github/commit/da9b401936c18a886cb1e64b2ba7d2e1474c5672)移除 CISA，說明 11/8 的副本寄錯地址、CISA 沒有該通報案件。不能沿用舊版清單稱 CISA 已受理；本表未取得廠商或協調機構的獨立確認。
+- **尚不足以新增攻擊判定。** 本表只核對公開頁面與更正，未取得私下通報或驗證技術內容；不能據此認定新的投遞路徑、已遭利用、受害範圍或新增 IOC，也不能認定官方預告的 **11/12 防護更新**已修復這 10 份公告涉及的問題。
+- 本次僅新增研究者披露狀態與限制，**不更動腳本、感染判定或既有隔離、證據保全及帳號保護建議**；未執行惡意程式、操作玩家電腦或測試漏洞。
 
 ### 官方說法
 
@@ -110,6 +118,7 @@ NIKKE PC 啟動器裡有一個內建的網頁畫面，每次開啟都會從 Leve
 | **11/8 08:07:46** | MotherSphere 正式發布 [v0.6.0](https://github.com/MotherSphere/NIKKE-Launcher-Check/releases/tag/v0.6.0)，新增 `6ae4f146-3214f` ETag 識別；gzip、loaded-DLL 覆蓋率及 timeout 問答修正仍未納入 |
 | **11/8 08:08** | [作者對單一 250,368-byte DLL 的反組譯補充](https://github.com/MotherSphere/NIKKE-Launcher-Check/issues/32#issuecomment-6714845858)：非 `chrome.exe` 或未載入 `chrome.dll` 就返回，`/px/` 不讀回應本文；不能泛化所有變種或否定啟動器 RAT 風險 |
 | **11/10 23:50** | [官方補充安全檢查說明](https://nikke-en.com/newsdetail.html?content_id=d58204e4a5cc4a4824a8dd3a77f0f5089e12)：檢查約 30 秒至 2 分鐘、提示可能出現在大廳或遊戲中，並稱加入多語系；預告 11/12（UTC+9）完整性與來源真實性驗證更新，尚非部署完成確認 |
+| **11/11 20:37** | [Colony Labs 更正協調單位](https://github.com/Colony-Labs/.github/commit/da9b401936c18a886cb1e64b2ba7d2e1474c5672)，移除 CISA；公開頁面列出 10 份未公開技術內容的 Windows 啟動器安全公告，稱 11/8 通報、11/10 補充，預定 12/8 或經驗證修復後提前公開。這是研究者披露狀態，非已遭利用或修復完成的確認 |
 
 **11/4 13:52 本表抽查已有改善，但只是有限觀察。** 當時的檢查只讀取這四個檔案並計算雜湊，沒有執行 JavaScript。`FeedList` 這次收到 5,099 bytes，SHA-256 為 `49b625b30b34dc1fa16edba30bdf63c18b6171a0fc4cf030e21ea4e1263ae18a`，與[已知乾淨版對照](https://github.com/WormW/nikke_malware_analysis/blob/a2cb84787d334ef6027df45a216eb929c8c79149/docs/en/attack-path.md#211-official-asset-remediation-status-2026-11-04-re-check)相符。回應的 `Date` 是 03:12 UTC，並非本次取得時間，因此不能當作即時源站或全節點驗證。
 
@@ -449,6 +458,8 @@ Defender（包括離線掃描）曾經漏掉這顆 DLL，**掃毒顯示乾淨不
 **11/5 [官方手動指南](https://nikke-en.com/newsdetail.html?content_id=ecdccd40a55a5a46aaa9abda64d436082db7)明確表示手機版本未受這次事件影響，只玩手機版的人不需為此事件額外檢查。** 這不涵蓋同時在 PC 版使用過的帳號。用 Linux 或 Steam Deck（Proton）跑 PC 版仍有研究者記錄的風險；官方這份 Windows 指南不是 Proton 的安全確認。本表指令只適用 Windows，其他系統請看 [MotherSphere 的檢查工具說明](https://github.com/MotherSphere/NIKKE-Launcher-Check)。
 
 ## 資料來源
+
+- [Colony Labs 協調揭露狀態（固定版本）](https://github.com/Colony-Labs/.github/blob/da9b401936c18a886cb1e64b2ba7d2e1474c5672/profile/README.md#current-work)與[CISA 更正提交](https://github.com/Colony-Labs/.github/commit/da9b401936c18a886cb1e64b2ba7d2e1474c5672)：更正提交為 11/11 20:37（台灣時間），11/12 01:23 核對；10 份通報、通報日期、協調單位及 12/8 揭露安排均為研究者公開說法。未取得私下通報或獨立驗證技術內容，不新增 IOC、投遞路徑或已遭利用結論，也不把 11/12 官方更新視為對應修復證據
 
 - [11/10 官方安全檢查補充公告](https://nikke-en.com/newsdetail.html?content_id=d58204e4a5cc4a4824a8dd3a77f0f5089e12)與[台港澳後續措施更正](https://nikke.hotcool.tw/News_detail-240)：英文公告 CMS 發布時間為 11/10 23:50（台灣時間），11/11 00:21 核對全文；台港澳頁首仍為 11/5，正文標註 11/11 更正。視窗時機、多語系與服務恢復為官方說法，11/12（UTC+9）防護更新為預定；未實測 ACE、清除效果或部署，不作全面安全保證
 
